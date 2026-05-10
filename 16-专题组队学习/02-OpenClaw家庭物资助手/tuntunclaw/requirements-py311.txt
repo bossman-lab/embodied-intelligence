@@ -1,0 +1,46 @@
+﻿# Core dependencies for VLM_Grasp_Interactive on Python 3.11
+# Install with: python -m pip install -r requirements-py311.txt
+
+--extra-index-url https://download.pytorch.org/whl/cu124
+
+numpy==1.26.4
+scipy==1.16.0
+mpmath==1.3.0
+sympy==1.13.1
+jinja2==3.1.6
+networkx==3.4.2
+pillow==11.3.0
+opencv-python==4.11.0.86
+open3d==0.19.0
+plotly==5.24.1
+mujoco==3.3.7
+scikit-learn==1.5.2
+
+# PyTorch CUDA 12.4 stack
+torch==2.6.0+cu124
+torchvision==0.21.0+cu124
+torchaudio==2.6.0+cu124
+
+# LLM/VLM + segmentation
+openai==2.26.0
+ultralytics==8.3.98
+fastapi
+uvicorn
+
+# Robotics stack
+spatialmath-python==1.1.14
+roboticstoolbox-python==1.1.1
+modern-robotics==1.1.1
+transforms3d==0.4.2
+ik-geo==1.0.3
+
+# GraspNet API dependencies
+autolab-core==1.1.1
+cvxopt==1.3.3
+pyhull==2015.2.1
+
+# Audio utilities used by original code (optional but kept for compatibility)
+openai-whisper
+soundfile
+sounddevice
+pydub

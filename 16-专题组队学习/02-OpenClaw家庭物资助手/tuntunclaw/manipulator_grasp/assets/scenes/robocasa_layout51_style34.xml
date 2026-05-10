@@ -1,0 +1,17 @@
+<mujoco model="empty_arena">
+  <asset>
+    <texture builtin="gradient" height="256" rgb1="0.98 0.98 1.00" rgb2="0.06 0.08 0.12" type="skybox" width="256" />
+  </asset>
+  <worldbody>    
+    <light pos="2.0 -2.0 2.0" dir="0.01 0.01 -1" specular="0.3 0.3 0.3" ambient="0.3 0.3 0.3" diffuse="0.3 0.3 0.3" directional="true" castshadow="false" />
+
+    
+    
+    
+    
+    
+    
+    
+    
+  <body mocap="true" pos="0 0 -1" name="left_eef_target"><geom rgba="0.898 0.420 0.435 0.5" conaffinity="0" contype="0" type="box" size="0.05 0.05 0.05" pos="0 0 0" group="2" name="left_eef_target_box" /><geom rgba="0.898 0.420 0.435 0.8" conaffinity="0" contype="0" type="sphere" size="0.01" pos="0 0 0" group="2" name="left_eef_target_sphere" /></body><body mocap="true" pos="0 0 -1" name="right_eef_target"><geom rgba="0.208 0.314 0.439 0.5" conaffinity="0" contype="0" type="box" size="0.05 0.05 0.05" pos="0 0 0" group="2" name="right_eef_target_box" /><geom rgba="0.208 0.314 0.439 0.8" conaffinity="0" contype="0" type="sphere" size="0.01" pos="0 0 0" group="2" name="right_eef_target_sphere" /></body></worldbody>
+<actuator /><sensor /><tendon /><equality /><contact /></mujoco>

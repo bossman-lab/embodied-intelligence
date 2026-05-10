@@ -1,0 +1,30 @@
+# video2robot default configuration
+
+# Veo Video Generation
+veo:
+  model_id: "veo-3.1-generate-preview"
+  aspect_ratio: "16:9"
+  duration_seconds: 8
+  poll_interval: 10
+  max_wait_time: 600
+
+# Pose Extraction (PromptHMR)
+pose:
+  static_camera: false
+  max_height: 896
+  max_fps: 60
+  tracker: "sam2"  # bytetrack or sam2
+  run_post_opt: true
+
+# Robot Retargeting (GMR)
+robot:
+  robot_type: "unitree_g1"
+  target_fps: 30
+  visualize: false
+  record_video: false
+
+# Output Settings
+output:
+  save_intermediate: true
+  output_dir: "data"
+

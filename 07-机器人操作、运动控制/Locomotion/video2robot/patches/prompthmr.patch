@@ -1,0 +1,252 @@
+diff --git a/pipeline/detector/sam2_video_predictor.py b/pipeline/detector/sam2_video_predictor.py
+index a3d8aae..bdd5781 100755
+--- a/pipeline/detector/sam2_video_predictor.py
++++ b/pipeline/detector/sam2_video_predictor.py
+@@ -18,7 +18,7 @@ from omegaconf import OmegaConf
+ # from tqdm import tqdm
+ 
+ from sam2.modeling.sam2_base import NO_OBJ_SCORE, SAM2Base
+-from sam2.utils.misc import concat_points, fill_holes_in_mask_scores, load_video_frames, load_video_frames_from_np
++from sam2.utils.misc import concat_points, fill_holes_in_mask_scores, load_video_frames
+ 
+ 
+ img_mean=(0.485, 0.456, 0.406)
+diff --git a/pipeline/droidcalib/setup.py b/pipeline/droidcalib/setup.py
+index c14c104..e00730b 100644
+--- a/pipeline/droidcalib/setup.py
++++ b/pipeline/droidcalib/setup.py
+@@ -4,61 +4,61 @@ from torch.utils.cpp_extension import BuildExtension, CUDAExtension
+ import os.path as osp
+ ROOT = osp.dirname(osp.abspath(__file__))
+ 
+-# setup(
+-#     name='droid_backends_intr',
+-#     version='0.3',
+-#     ext_modules=[
+-#         CUDAExtension('droid_backends_intr',
+-#             include_dirs=[osp.join(ROOT, 'thirdparty/eigen')],
+-#             sources=[
+-#                 'src/droid.cpp', 
+-#                 'src/droid_kernels.cu',
+-#                 'src/correlation_kernels.cu',
+-#                 'src/altcorr_kernel.cu',
+-#             ],
+-#             extra_compile_args={
+-#                 'cxx': ['-O3'],
+-#                 'nvcc': ['-O3',
+-#                     '-gencode=arch=compute_60,code=sm_60',
+-#                     '-gencode=arch=compute_61,code=sm_61',
+-#                     '-gencode=arch=compute_70,code=sm_70',
+-#                     '-gencode=arch=compute_75,code=sm_75',
+-#                     '-gencode=arch=compute_80,code=sm_80',
+-#                     '-gencode=arch=compute_86,code=sm_86',
+-#                     '-gencode=arch=compute_90,code=sm_90',
+-#                 ]
+-#             }),
+-#     ],
+-#     cmdclass={ 'build_ext' : BuildExtension }
+-# )
+-
+ setup(
+-    name='lietorch',
++    name='droid_backends_intr',
+     version='0.3',
+-    description='Lie Groups for PyTorch',
+-    packages=['lietorch'],
+-    package_dir={'': 'thirdparty/lietorch'},
+     ext_modules=[
+-        CUDAExtension('lietorch_backends', 
+-            include_dirs=[
+-                osp.join(ROOT, 'thirdparty/lietorch/lietorch/include'), 
+-                osp.join(ROOT, 'thirdparty/eigen')],
++        CUDAExtension('droid_backends_intr',
++            include_dirs=[osp.join(ROOT, 'thirdparty/eigen')],
+             sources=[
+-                'thirdparty/lietorch/lietorch/src/lietorch.cpp', 
+-                'thirdparty/lietorch/lietorch/src/lietorch_gpu.cu',
+-                'thirdparty/lietorch/lietorch/src/lietorch_cpu.cpp'],
++                'src/droid.cpp', 
++                'src/droid_kernels.cu',
++                'src/correlation_kernels.cu',
++                'src/altcorr_kernel.cu',
++            ],
+             extra_compile_args={
+-                'cxx': ['-O2'], 
+-                'nvcc': ['-O2',
+-                    '-gencode=arch=compute_60,code=sm_60', 
+-                    '-gencode=arch=compute_61,code=sm_61', 
+-                    '-gencode=arch=compute_70,code=sm_70', 
++                'cxx': ['-O3'],
++                'nvcc': ['-O3',
++                    '-gencode=arch=compute_60,code=sm_60',
++                    '-gencode=arch=compute_61,code=sm_61',
++                    '-gencode=arch=compute_70,code=sm_70',
+                     '-gencode=arch=compute_75,code=sm_75',
+                     '-gencode=arch=compute_80,code=sm_80',
+-                    '-gencode=arch=compute_86,code=sm_86', 
++                    '-gencode=arch=compute_86,code=sm_86',
+                     '-gencode=arch=compute_90,code=sm_90',
+                 ]
+             }),
+     ],
+     cmdclass={ 'build_ext' : BuildExtension }
+ )
++
++# setup(
++#     name='lietorch',
++#     version='0.3',
++#     description='Lie Groups for PyTorch',
++#     packages=['lietorch'],
++#     package_dir={'': 'thirdparty/lietorch'},
++#     ext_modules=[
++#         CUDAExtension('lietorch_backends', 
++#             include_dirs=[
++#                 osp.join(ROOT, 'thirdparty/lietorch/lietorch/include'), 
++#                 osp.join(ROOT, 'thirdparty/eigen')],
++#             sources=[
++#                 'thirdparty/lietorch/lietorch/src/lietorch.cpp', 
++#                 'thirdparty/lietorch/lietorch/src/lietorch_gpu.cu',
++#                 'thirdparty/lietorch/lietorch/src/lietorch_cpu.cpp'],
++#             extra_compile_args={
++#                 'cxx': ['-O2'], 
++#                 'nvcc': ['-O2',
++#                     '-gencode=arch=compute_60,code=sm_60', 
++#                     '-gencode=arch=compute_61,code=sm_61', 
++#                     '-gencode=arch=compute_70,code=sm_70', 
++#                     '-gencode=arch=compute_75,code=sm_75',
++#                     '-gencode=arch=compute_80,code=sm_80',
++#                     '-gencode=arch=compute_86,code=sm_86', 
++#                     '-gencode=arch=compute_90,code=sm_90',
++#                 ]
++#             }),
++#     ],
++#     cmdclass={ 'build_ext' : BuildExtension }
++# )
+diff --git a/pipeline/droidcalib/src/altcorr_kernel.cu b/pipeline/droidcalib/src/altcorr_kernel.cu
+index f418f5c..b53be29 100644
+--- a/pipeline/droidcalib/src/altcorr_kernel.cu
++++ b/pipeline/droidcalib/src/altcorr_kernel.cu
+@@ -306,7 +306,7 @@ std::vector<torch::Tensor> altcorr_cuda_forward(
+   const dim3 threads(BLOCK_H, BLOCK_W);
+ 
+ 
+-  AT_DISPATCH_FLOATING_TYPES_AND_HALF(fmap1.type(), "altcorr_forward_kernel", ([&] {
++  AT_DISPATCH_FLOATING_TYPES_AND_HALF(fmap1.scalar_type(), "altcorr_forward_kernel", ([&] {
+     altcorr_forward_kernel<scalar_t><<<blocks, threads>>>(
+         fmap1.packed_accessor32<scalar_t,4,torch::RestrictPtrTraits>(),
+         fmap2.packed_accessor32<scalar_t,4,torch::RestrictPtrTraits>(),
+diff --git a/pipeline/droidcalib/src/correlation_kernels.cu b/pipeline/droidcalib/src/correlation_kernels.cu
+index 2812067..df5735c 100644
+--- a/pipeline/droidcalib/src/correlation_kernels.cu
++++ b/pipeline/droidcalib/src/correlation_kernels.cu
+@@ -142,7 +142,7 @@ std::vector<torch::Tensor> corr_index_cuda_forward(
+   torch::Tensor corr = torch::zeros(
+     {batch_size, 2*radius+1, 2*radius+1, ht, wd}, opts);
+ 
+-  AT_DISPATCH_FLOATING_TYPES_AND_HALF(volume.type(), "sampler_forward_kernel", ([&] {
++  AT_DISPATCH_FLOATING_TYPES_AND_HALF(volume.scalar_type(), "sampler_forward_kernel", ([&] {
+     corr_index_forward_kernel<scalar_t><<<blocks, threads>>>(
+       volume.packed_accessor32<scalar_t,5,torch::RestrictPtrTraits>(),
+       coords.packed_accessor32<float,4,torch::RestrictPtrTraits>(),
+@@ -173,7 +173,7 @@ std::vector<torch::Tensor> corr_index_cuda_backward(
+   const dim3 threads(BLOCK, BLOCK);
+ 
+ 
+-  AT_DISPATCH_FLOATING_TYPES_AND_HALF(volume.type(), "sampler_backward_kernel", ([&] {
++  AT_DISPATCH_FLOATING_TYPES_AND_HALF(volume.scalar_type(), "sampler_backward_kernel", ([&] {
+     corr_index_backward_kernel<scalar_t><<<blocks, threads>>>(
+       coords.packed_accessor32<float,4,torch::RestrictPtrTraits>(),
+       corr_grad.packed_accessor32<scalar_t,5,torch::RestrictPtrTraits>(),
+diff --git a/prompt_hmr/__init__.py b/prompt_hmr/__init__.py
+index c78547c..f7f875d 100644
+--- a/prompt_hmr/__init__.py
++++ b/prompt_hmr/__init__.py
+@@ -11,7 +11,7 @@ def load_model(ckpt):
+     cfg = parse_args(['--cfg', cfg])
+     model = build_phmr(cfg)
+     model = model.cuda()
+-    _ = model.load_state_dict(weight['state_dict'], strict=True)
++    _ = model.load_state_dict(weight['state_dict'], strict=False)
+     _ = model.eval()
+     model.is_train = False
+     return model
+diff --git a/prompt_hmr/models/phmr.py b/prompt_hmr/models/phmr.py
+index 0b0fe03..af7a0a4 100644
+--- a/prompt_hmr/models/phmr.py
++++ b/prompt_hmr/models/phmr.py
+@@ -5,11 +5,10 @@ import pickle as pkl
+ from torch.amp import autocast
+ 
+ from prompt_hmr.utils.rotation_utils import rotation_6d_to_matrix
+-from prompt_hmr.smpl_family import SMPLX, SMPL
++from prompt_hmr.smpl_family import SMPLX
+ from .components import ImageEncoder, PromptEncoder, SMPLDecoder
+ 
+ SMPLX_MODEL_DIR = 'data/body_models/smplx'
+-SMPL_MODEL_DIR = 'data/body_models/smpl'
+ SMPLX2SMPL = 'data/body_models/smplx2smpl.pkl'
+ 
+ class PHMR(pl.LightningModule):
+@@ -30,7 +29,9 @@ class PHMR(pl.LightningModule):
+         self.prompt_encoder = prompt_encoder
+         self.smpl_decoder = smpl_decoder
+         self.smplx = SMPLX(SMPLX_MODEL_DIR)
+-        self.smpl = SMPL(SMPL_MODEL_DIR)
++        # In inference we only need SMPL joints/verts derived from SMPL-X vertices.
++        # Keep this as None to avoid hard dependency on local SMPL model files.
++        self.smpl = None
+         self.cam_encoder = cam_encoder
+         
+         smplx2smpl = torch.from_numpy(pkl.load(open(SMPLX2SMPL, 'rb'))['matrix'])
+@@ -141,7 +142,8 @@ class PHMR(pl.LightningModule):
+ 
+             # smpl
+             smpl_verts = self.smplx2smpl @ vertices
+-            smpl_joints = self.smpl.joints_from_vertices(smpl_verts)
++            # Regress SMPL-compatible joints directly from SMPL-X vertices.
++            smpl_joints = self.smplx.smpl_joints @ vertices
+ 
+             smpl_joints2d = smpl_joints 
+             smpl_joints2d = smpl_joints2d/(smpl_joints2d[...,[-1]] + 1e-5)
+@@ -150,7 +152,7 @@ class PHMR(pl.LightningModule):
+             output['smpl_vertices'] = smpl_verts
+             output['smpl_joints'] = smpl_joints
+             output['smpl_joints2d'] = smpl_joints2d.clamp(-2e3, 2e3)
+-            output['smpl_j3d'] = self.smpl.J_regressor @ smpl_verts
++            output['smpl_j3d'] = smpl_joints
+             
+         return output
+ 
+diff --git a/scripts/install.sh b/scripts/install.sh
+old mode 100644
+new mode 100755
+index a8a1cff..4107e8c
+--- a/scripts/install.sh
++++ b/scripts/install.sh
+@@ -8,6 +8,17 @@
+ PT_VERSION=""
+ WORLD_VIDEO="false"  # Default to false
+ 
++# Resolve conda executable for non-interactive shells.
++if [ -n "${CONDA_EXE:-}" ]; then
++    CONDA_CMD="$CONDA_EXE"
++elif [ -x "/opt/conda/bin/conda" ]; then
++    CONDA_CMD="/opt/conda/bin/conda"
++elif command -v conda >/dev/null 2>&1; then
++    CONDA_CMD="$(command -v conda)"
++else
++    echo "Error: conda command not found. Please install conda or set CONDA_EXE."
++    exit 1
++fi
+ show_usage() {
+     echo "Usage: $0 --pt_version <version> [--world-video=<true|false>]"
+     echo ""
+@@ -99,7 +110,7 @@ fi
+ 
+ echo "Installing PyTorch version $PT_VERSION..."
+ 
+-eval "$(conda shell.bash hook)"
++eval "$("$CONDA_CMD" shell.bash hook)"
+ 
+ if [ "$WORLD_VIDEO" == "true" ]; then
+     echo "World-video option enabled: Will download data and install wheel packages"

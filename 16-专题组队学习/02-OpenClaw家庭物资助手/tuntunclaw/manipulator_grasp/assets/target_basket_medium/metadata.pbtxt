@@ -1,0 +1,35 @@
+model {
+  file: "model.sdf"
+}
+name: "Target_Basket_Medium"
+description: "Target Basket, Medium"
+version: 1
+authors {
+  name: "Google"
+  email: "scanned-objects@google.com"
+}
+legal {
+  copyright: "Copyright 2020 Google LLC."
+  license: "Creative Commons Attribution 4.0 International"
+}
+annotations {
+  key: "brand"
+  value: "Target"
+}
+annotations {
+  key: "gtin"
+  value: "00490642003833"
+}
+annotations {
+  key: "sku"
+  value: "00490642003833"
+}
+compatibilities {
+  name: "Gazebo"
+  version {
+    major: 11
+  }
+}
+categories {
+  first: "Consumer Goods"
+}

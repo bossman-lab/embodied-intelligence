@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Every-Embodied 电子书</title>
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="apple-touch-icon" href="./favicon.png" />
+    <link rel="stylesheet" href="./vendor/katex/katex.min.css" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body class="app-booting">
+    <header class="topbar">
+      <button class="icon-button menu-button" id="openNav" type="button" aria-label="打开目录">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <a class="brand" href="#/" aria-label="回到首页">
+        <span class="brand-mark">
+          <img id="brandLogo" src="./favicon.png" alt="Every-Embodied logo" />
+        </span>
+        <span>
+          <strong>Every-Embodied</strong>
+          <small>电子书</small>
+        </span>
+      </a>
+      <nav class="top-links" aria-label="快速入口">
+        <a href="#/">首页</a>
+        <a href="#/home/module-navigation">导航模型</a>
+        <a href="#/home/module-operation">操作模型</a>
+        <a href="#/home/module-world">世界模型</a>
+        <a href="#/home/module-practice">应用实践</a>
+        <a href="#/book?catalog=1" id="catalogLink">电子书</a>
+        <a href="https://github.com/datawhalechina/every-embodied" target="_blank" rel="noopener noreferrer">GitHub</a>
+      </nav>
+      <div class="top-meta" id="topMeta">正在读取目录</div>
+      <a
+        class="star-pill"
+        id="starPill"
+        href="https://github.com/datawhalechina/every-embodied"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="GitHub stars"
+      >
+        <span class="star-icon">★</span>
+        <span>Starred</span>
+        <strong id="starCount">--</strong>
+      </a>
+    </header>
+
+    <div class="layout">
+      <aside class="sidebar" id="sidebar" aria-label="章节目录">
+        <div class="sidebar-head">
+          <div>
+            <p class="eyebrow">自动目录</p>
+            <h2>章节</h2>
+          </div>
+          <button class="icon-button close-button" id="closeNav" type="button" aria-label="关闭目录">×</button>
+        </div>
+        <label class="search-box">
+          <span>搜索</span>
+          <input id="searchInput" type="search" placeholder="章节、路径、关键词" autocomplete="off" />
+        </label>
+        <div class="catalog-status" id="catalogStatus">扫描 Markdown 中</div>
+        <nav class="nav-tree" id="navTree"></nav>
+      </aside>
+
+      <main class="reader" id="reader">
+        <section class="home-page" id="homePage" hidden>
+          <section class="home-hero" aria-labelledby="homeTitle">
+            <img class="home-hero-image" id="homeHeroImage" alt="Every-Embodied 首页背景" />
+            <div class="home-hero-shade"></div>
+            <div class="home-hero-copy">
+              <p class="home-kicker">Every-Embodied</p>
+              <h1 id="homeTitle" aria-label="从 0 到 1，走进具身智能。">
+                <span>从 0 到 1，</span>
+                <span>走进具身智能。</span>
+              </h1>
+              <p>机器人基础、仿真工具、视觉感知、VLA、导航与复现路线，一本电子书连起来。</p>
+              <div class="home-actions">
+                <a class="home-button primary" href="#/book">进一步了解</a>
+                <a class="home-button" href="#/home/homeDemos">浏览项目</a>
+              </div>
+            </div>
+          </section>
+
+          <section class="home-demo-section" id="homeDemos">
+            <div class="home-section-head">
+              <p class="home-kicker">项目实践</p>
+              <h2>先看到结果，再进入教程。</h2>
+              <p>从仿真入门、Pi0 部署、LeRobot 遥操作，到视觉感知、无人机导航和 LIBERO 基准。</p>
+            </div>
+            <div class="home-demo-grid" id="homeDemoGrid"></div>
+          </section>
+
+          <section class="home-path-section" id="homePaths">
+            <div id="homeModuleList"></div>
+          </section>
+
+          <section class="home-closing">
+            <p class="home-kicker">Zero to Hero</p>
+            <h2>打开完整电子书。</h2>
+            <div class="home-actions">
+              <a class="home-button primary" href="#/book">进一步了解</a>
+              <a class="home-button" href="#/book?catalog=1">查看目录</a>
+            </div>
+          </section>
+        </section>
+
+        <section class="reader-head">
+          <div class="reader-title">
+            <p class="eyebrow" id="breadcrumb">Every-Embodied</p>
+            <h1 id="docTitle">正在加载</h1>
+          </div>
+          <div class="reader-actions">
+            <button class="control-button" id="toggleCatalog" type="button">展开章节总览</button>
+            <button class="control-button" id="refreshCatalog" type="button">刷新目录</button>
+          </div>
+        </section>
+
+        <section class="catalog-overview" id="catalogOverview" hidden>
+          <div class="overview-copy">
+            <p class="eyebrow">学习导航</p>
+            <h2>按文件夹自动排布</h2>
+            <p>新增或移动 Markdown 后，重新构建即可同步目录。</p>
+          </div>
+          <div class="overview-grid" id="overviewGrid"></div>
+        </section>
+
+        <article class="article" id="article" aria-live="polite"></article>
+
+        <nav class="pager" aria-label="上一篇和下一篇">
+          <a class="pager-link" id="prevLink" href="#"></a>
+          <a class="pager-link" id="nextLink" href="#"></a>
+        </nav>
+      </main>
+
+      <aside class="outline" aria-label="本文目录">
+        <div class="outline-inner">
+          <p class="eyebrow">本文目录</p>
+          <nav id="outlineNav"></nav>
+        </div>
+      </aside>
+    </div>
+
+    <div class="scrim" id="scrim"></div>
+    <script src="./app.js" defer></script>
+  </body>
+</html>

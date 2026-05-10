@@ -1,0 +1,1 @@
+﻿"""OpenClaw-like adaptation package."""

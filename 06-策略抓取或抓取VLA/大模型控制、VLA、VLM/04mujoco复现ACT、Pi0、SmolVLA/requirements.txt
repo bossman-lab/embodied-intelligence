@@ -1,0 +1,12 @@
+mujoco==3.1.6
+pyautogui
+matplotlib
+scipy
+safetensors==0.5.3
+datasets==3.4.1
+torch==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+torchvision==0.21.0 --index-url https://download.pytorch.org/whl/cu124
+torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu124
+transformers==4.50.3
+git+https://github.com/huggingface/lerobot.git@10b7b3532543b4adfb65760f02a49b4c537afde7#egg=lerobot
+

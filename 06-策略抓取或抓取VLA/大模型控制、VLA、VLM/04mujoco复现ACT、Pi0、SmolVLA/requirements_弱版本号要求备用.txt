@@ -1,0 +1,11 @@
+mujoco
+pyautogui
+matplotlib
+scipy
+safetensors
+datasets
+torch
+torchvision
+torchaudio
+transformers
+git+https://github.com/huggingface/lerobot.git@10b7b3532543b4adfb65760f02a49b4c537afde7#egg=lerobot

@@ -1,0 +1,11 @@
+<mujoco model="Scanned Objects">
+    <size memory="500M"/>
+    <option integrator="RK4" noslip_iterations="20" />
+
+    <include file="./tabletop/object/floor_isaac_style.xml" />
+    <include file="./tabletop/object/object_table.xml" />
+
+    <include file="./nova5_description/nova5.xml" />
+    <include file="./objaverse/mug_5/model_new.xml"/>
+    <include file="./objaverse/plate_11/model_new.xml"/>
+</mujoco>

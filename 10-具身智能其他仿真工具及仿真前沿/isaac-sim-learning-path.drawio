@@ -1,0 +1,246 @@
+<mxfile host="65bd71144e">
+    <diagram id="cQaFLQl4Q_mRGJ6EGBM0" name="Isaac Sim学习路径">
+        <mxGraphModel dx="1323" dy="778" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="2" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;NVIDIA Isaac Sim 学习路径&lt;/b&gt;&lt;/font&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="444.5" y="20" width="280" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="入门阶段" style="swimlane;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="70" width="200" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="4" value="1. 安装与配置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="3" vertex="1">
+                    <mxGeometry x="20" y="40" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="5" value="2. GUI界面熟悉" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="3" vertex="1">
+                    <mxGeometry x="20" y="80" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="3. 基础场景创建" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="3" vertex="1">
+                    <mxGeometry x="20" y="120" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="7" value="4. 添加基础物体" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="3" vertex="1">
+                    <mxGeometry x="20" y="160" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="8" value="5. 运行简单模拟" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="3" vertex="1">
+                    <mxGeometry x="20" y="190" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="9" value="机器人仿真" style="swimlane;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="70" width="200" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="10" value="1. 导入机器人模型" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="9" vertex="1">
+                    <mxGeometry x="20" y="40" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="11" value="2. URDF导入与配置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="9" vertex="1">
+                    <mxGeometry x="20" y="80" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="12" value="3. 关节控制与驱动" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="9" vertex="1">
+                    <mxGeometry x="20" y="120" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="13" value="4. 运动学与动力学" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="9" vertex="1">
+                    <mxGeometry x="20" y="160" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="14" value="5. 碰撞与物理交互" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="9" vertex="1">
+                    <mxGeometry x="20" y="190" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="15" value="环境与传感器" style="swimlane;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="70" width="200" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="16" value="1. 环境资产导入" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="15" vertex="1">
+                    <mxGeometry x="20" y="40" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="17" value="2. 光照与材质" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="15" vertex="1">
+                    <mxGeometry x="20" y="80" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="3. 相机与图像" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="15" vertex="1">
+                    <mxGeometry x="20" y="120" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="19" value="4. 激光雷达配置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="15" vertex="1">
+                    <mxGeometry x="20" y="160" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="5. 多传感器集成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" parent="15" vertex="1">
+                    <mxGeometry x="20" y="190" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="编程与扩展" style="swimlane;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="70" width="200" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="1. Python API基础" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="21" vertex="1">
+                    <mxGeometry x="20" y="40" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="2. OmniGraph节点" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="21" vertex="1">
+                    <mxGeometry x="20" y="80" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="24" value="3. 自定义扩展开发" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="21" vertex="1">
+                    <mxGeometry x="20" y="120" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="25" value="4. 场景脚本编写" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="21" vertex="1">
+                    <mxGeometry x="20" y="160" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="26" value="5. USD工作流集成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" parent="21" vertex="1">
+                    <mxGeometry x="20" y="190" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="27" value="高级应用" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="340" width="200" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="1. ROS/ROS2集成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="27" vertex="1">
+                    <mxGeometry x="20" y="40" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="2. 多机器人协同" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="27" vertex="1">
+                    <mxGeometry x="20" y="80" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="3. 高级导航与控制" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="27" vertex="1">
+                    <mxGeometry x="20" y="120" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="4. 数字孪生应用" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="27" vertex="1">
+                    <mxGeometry x="20" y="160" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="5. 仓库和工厂仿真" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" parent="27" vertex="1">
+                    <mxGeometry x="20" y="190" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" value="人工智能与学习" style="swimlane;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="340" width="200" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="34" value="1. 合成数据生成" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="33" vertex="1">
+                    <mxGeometry x="20" y="40" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="35" value="2. Replicator配置" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="33" vertex="1">
+                    <mxGeometry x="20" y="80" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="36" value="3. 强化学习整合" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="33" vertex="1">
+                    <mxGeometry x="20" y="120" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="37" value="4. 模仿学习实现" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="33" vertex="1">
+                    <mxGeometry x="20" y="160" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="38" value="5. 强化学习策略部署" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="33" vertex="1">
+                    <mxGeometry x="20" y="190" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="39" value="项目与实践" style="swimlane;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="340" width="200" height="230" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="1. 智能抓取任务" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="39" vertex="1">
+                    <mxGeometry x="20" y="40" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="2. 移动机器人导航" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="39" vertex="1">
+                    <mxGeometry x="20" y="80" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="3. 协作机器人应用" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="39" vertex="1">
+                    <mxGeometry x="20" y="120" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" value="4. 家务机器人仿真" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="39" vertex="1">
+                    <mxGeometry x="20" y="160" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="5. 从仿真到实际部署" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f5f5;strokeColor=#666666;fontColor=#333333;" parent="39" vertex="1">
+                    <mxGeometry x="20" y="190" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="3" target="9" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="330" as="sourcePoint"/>
+                        <mxPoint x="610" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="46" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="9" target="15" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="330" as="sourcePoint"/>
+                        <mxPoint x="610" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="47" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="15" target="21" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="330" as="sourcePoint"/>
+                        <mxPoint x="610" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="48" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="21" target="33" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="330" as="sourcePoint"/>
+                        <mxPoint x="610" y="280" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="860" y="320"/>
+                            <mxPoint x="500" y="320"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="49" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="9" target="27" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="330" as="sourcePoint"/>
+                        <mxPoint x="610" y="280" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="380" y="320"/>
+                            <mxPoint x="260" y="320"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="50" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="27" target="33" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="330" as="sourcePoint"/>
+                        <mxPoint x="610" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="51" value="" style="endArrow=classic;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="33" target="39" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="560" y="330" as="sourcePoint"/>
+                        <mxPoint x="610" y="280" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="52" value="项目资源" style="swimlane;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="590" width="200" height="150" as="geometry"/>
+                </mxCell>
+                <mxCell id="53" value="1. 预构建机器人模型" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="52" vertex="1">
+                    <mxGeometry x="20" y="40" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="54" value="2. 环境和场景资产" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="52" vertex="1">
+                    <mxGeometry x="20" y="80" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="55" value="3. 示例代码和教程" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="52" vertex="1">
+                    <mxGeometry x="20" y="110" width="160" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="56" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" parent="1" source="27" target="52" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="550" y="530" as="sourcePoint"/>
+                        <mxPoint x="600" y="480" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="260" y="665"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="57" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;dashed=1;" parent="1" source="33" target="52" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="550" y="530" as="sourcePoint"/>
+                        <mxPoint x="600" y="480" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="58" value="" style="endArrow=classic;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;dashed=1;" parent="1" source="39" target="52" edge="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="550" y="530" as="sourcePoint"/>
+                        <mxPoint x="600" y="480" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="740" y="665"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="59" value="推荐学习顺序" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="90" y="30" width="90" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="60" value="&lt;b&gt;1&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="260" y="160" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="61" value="&lt;b&gt;2&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="160" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="62" value="&lt;b&gt;3&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="740" y="160" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="63" value="&lt;b&gt;4A&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="140" y="430" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="64" value="&lt;b&gt;4B&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="380" y="430" width="20" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="65" value="&lt;b&gt;5&lt;/b&gt;" style="ellipse;whiteSpace=wrap;html=1;aspect=fixed;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
+                    <mxGeometry x="620" y="430" width="20" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile> 

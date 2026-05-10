@@ -1,0 +1,39 @@
+# Large binary files
+*.zip
+*.parquet
+*.gif
+*.mp4
+*.avi
+*.mov
+*.bin
+*.pt
+*.pth
+*.onnx
+*.h5
+*.npy
+*.pkl
+*.joblib
+*.tar
+*.gz
+*.xz
+*.bz2
+
+# Model weights
+*.weights
+*.index
+*.data-*
+checkpoints/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+Thumbs.db

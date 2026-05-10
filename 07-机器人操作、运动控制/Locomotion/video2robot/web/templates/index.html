@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>video2robot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+        <div class="max-w-screen-2xl mx-auto px-6 py-4">
+            <h1 class="text-xl font-semibold text-gray-900">video2robot</h1>
+        </div>
+    </header>
+
+    <main class="max-w-screen-2xl mx-auto px-6 py-6">
+        <!-- 4-column Grid Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Left Column: New Project Form + Project List -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- New Project Form -->
+                <section id="new-project-form" class="bg-white rounded-lg border border-gray-200">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <h2 class="font-medium text-gray-900">新建项目</h2>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <!-- Mode Selection -->
+                        <div class="flex gap-4">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="input-mode" value="prompt" checked class="text-gray-900">
+                                <span class="text-sm">文生视频</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="input-mode" value="upload" class="text-gray-900">
+                                <span class="text-sm">上传视频</span>
+                            </label>
+                        </div>
+
+                        <!-- Prompt Input -->
+                        <div id="prompt-section">
+                            <!-- Base Prompt Toggle -->
+                            <div class="flex items-center gap-4 mb-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="toggle-base-prompt" class="rounded" checked>
+                                    <span class="text-sm text-gray-600">基础提示词模板</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="toggle-static-camera" class="rounded" checked disabled>
+                                    <span class="text-sm text-gray-600">静态机位</span>
+                                </label>
+                            </div>
+                            <div id="base-prompt-display" class="hidden mb-3">
+                                <textarea id="base-prompt-text" readonly rows="12"
+                                    class="w-full px-3 py-2 border border-gray-200 rounded text-xs bg-gray-50 text-gray-500 cursor-not-allowed resize-none"></textarea>
+                            </div>
+
+                            <label class="block text-sm text-gray-600 mb-1">动作描述</label>
+                            <textarea id="input-action" rows="9"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-gray-500"
+                                placeholder="动作序列：&#10;角色向前走四步。"></textarea>
+
+                            <div class="mt-3 grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">模型</label>
+                                    <select id="input-model" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+                                        <optgroup label="Seedance">
+                                            <option value="seedance" selected>Seedance</option>
+                                        </optgroup>
+                                        <optgroup label="Veo">
+                                            <option value="veo-3.1-fast">Veo 3.1 Fast</option>
+                                            <option value="veo-3.1">Veo 3.1</option>
+                                            <option value="veo-3.0-fast">Veo 3.0 Fast</option>
+                                            <option value="veo-3.0">Veo 3.0</option>
+                                            <option value="veo-2.0">Veo 2.0</option>
+                                        </optgroup>
+                                        <optgroup label="Sora">
+                                            <option value="sora">Sora</option>
+                                            <option value="sora-pro">Sora Pro</option>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm text-gray-600 mb-1">时长</label>
+                                    <select id="input-duration" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+                                        <option value="4">4s</option>
+                                        <option value="8" selected>8s</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Upload Section -->
+                        <div id="upload-section" class="hidden">
+                            <label class="block text-sm text-gray-600 mb-1">视频文件</label>
+                            <input type="file" id="input-video" accept="video/*"
+                                class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+                        </div>
+
+                        <!-- Robot Type -->
+                        <div>
+                            <label class="block text-sm text-gray-600 mb-1">机器人类型</label>
+                            <select id="input-robot" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+                                <option value="unitree_g1">Unitree G1 (29 DOF)</option>
+                                <option value="unitree_h1" disabled>Unitree H1 (Coming Soon)</option>
+                                <option value="booster_t1" disabled>Booster T1 (Coming Soon)</option>
+                                <option value="fourier_n1" disabled>Fourier N1 (Coming Soon)</option>
+                            </select>
+                        </div>
+
+                        <button id="btn-start-pipeline"
+                            class="w-full py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700 disabled:bg-gray-300">
+                            开始执行流程
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Project List -->
+                <section class="bg-white rounded-lg border border-gray-200">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <h2 class="font-medium text-gray-900">项目列表</h2>
+                    </div>
+                    <div id="project-list" class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                        <div class="px-4 py-8 text-center text-gray-500 text-sm">
+                            加载中...
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Columns: Project Detail + Task + Visualization -->
+            <div class="lg:col-span-3 space-y-6">
+                <!-- Project Detail -->
+                <section id="project-detail" class="bg-white rounded-lg border border-gray-200">
+                    <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <h2 id="detail-title" class="font-medium text-gray-900">请选择项目</h2>
+                            <div id="detail-badges" class="flex gap-1"></div>
+                        </div>
+                        <div id="detail-actions" class="flex gap-2 hidden">
+                            <button id="btn-extract-pose" class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50">
+                                提取姿态
+                            </button>
+                            <button id="btn-retarget" class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50">
+                                转机器人
+                            </button>
+                            <button id="btn-visualize" class="px-3 py-1.5 text-sm bg-gray-900 text-white rounded hover:bg-gray-700 disabled:opacity-50">
+                                可视化
+                            </button>
+                        </div>
+                    </div>
+                    <div id="detail-content" class="p-4">
+                        <p class="text-gray-500 text-sm">请在左侧选择项目</p>
+                    </div>
+                </section>
+
+                <!-- Task Status -->
+                <section id="task-status" class="bg-white rounded-lg border border-gray-200 hidden">
+                    <div class="px-4 py-3 border-b border-gray-200">
+                        <h2 class="font-medium text-gray-900">任务进度</h2>
+                    </div>
+                    <div id="task-content" class="p-4">
+                        <!-- Task items will be added here -->
+                    </div>
+                </section>
+
+                <!-- Visualization -->
+                <section id="visualization" class="bg-white rounded-lg border border-gray-200 hidden">
+                    <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-3">
+                        <h2 class="font-medium text-gray-900">3D 可视化</h2>
+                        <div class="flex items-center gap-2">
+                            <label class="text-sm text-gray-600">机器人外观</label>
+                            <select id="input-robot-appearance" class="px-2 py-1 border border-gray-300 rounded text-sm">
+                                <option value="color" selected>彩色（按角色区分）</option>
+                                <option value="metal">铁皮原色（更真实）</option>
+                            </select>
+                            <button id="btn-close-viser" class="text-sm text-gray-500 hover:text-gray-700">关闭</button>
+                        </div>
+                    </div>
+                    <div class="relative" style="height: 600px;">
+                        <iframe id="viser-frame" class="w-full h-full border-0" src="about:blank"></iframe>
+                        <div id="viser-loading" class="absolute inset-0 flex items-center justify-center bg-gray-100">
+                            <span class="text-gray-500">正在启动 3D 服务...</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/js/main.js?v=11"></script>
+</body>
+</html>

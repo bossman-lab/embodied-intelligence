@@ -1,0 +1,1539 @@
+diff --git a/.env.example b/.env.example
+index 5f9e592..872edeb 100644
+--- a/.env.example
++++ b/.env.example
+@@ -7,3 +7,7 @@ GOOGLE_API_KEY=your-google-api-key-here
+ # OpenAI API Key (for Sora video generation)
+ # Get your API key at: https://platform.openai.com/api-keys
+ OPENAI_API_KEY=your-openai-api-key-here
++
++# Seedance API Key (for Seedance video generation)
++# Example API endpoint: https://seedanceapi.org/v1
++SEEDANCE_API_KEY=your-seedance-api-key-here
+diff --git a/README.md b/README.md
+index 995810e..d5c4f68 100644
+--- a/README.md
++++ b/README.md
+@@ -1,77 +1,43 @@
+-# video2robot
++# video2robot（中文增强版）
+ 
+-End-to-end pipeline: Video (or Prompt) → Human Pose Extraction → Robot Motion Conversion
++视频（或文本动作）到机器人动作的端到端流水线：
+ 
+-## Demo
++`Prompt / Video -> PromptHMR -> SMPL-X -> GMR -> Robot Motion`
+ 
+-<p align="center">
+-<video src="https://github.com/user-attachments/assets/a0f1bfb1-7e06-4672-8f6a-320ab60b0bfe" width="800" controls></video>
+-</p>
+-<p align="center"><b>Demo Video</b></p>
++## 本仓库新增功能
+ 
+-<table>
+-<tr>
+-<td align="center" width="50%">
+-<video src="https://github.com/user-attachments/assets/1d58bac8-173c-499d-b245-65013371d50f" width="400" controls></video>
+-<br><b>Backflip</b>
+-</td>
+-<td align="center" width="50%">
+-<video src="https://github.com/user-attachments/assets/94e6d12d-afae-4300-8c5c-c244ad208bdb" width="400" controls></video>
+-<br><b>Dance Motion</b>
+-</td>
+-</tr>
+-</table>
++- 接入 `Seedance` 视频生成（默认可用，保留 Veo/Sora）
++- Web UI 中文化，支持：
++  - 文生视频
++  - 上传视频
++  - 自动流水线（生成/提取/重定向）
++- Web 3D 可视化支持机器人外观切换：
++  - 彩色（按角色区分）
++  - 铁皮原色（更真实）
++- 多人轨迹支持：
++  - `--all-tracks` 生成所有轨迹机器人动作
++  - `--robot-all` 在 robot-viser 同时显示多角色
++- 新增 MuJoCo 多机器人录制脚本：
++  - `third_party/GMR/scripts/vis_robot_motion_multi.py`
++  - 支持多个 `robot_motion_track_*.pkl` 同场显示与录制
+ 
+-## Pipeline
++## 环境准备
+ 
+-```
+-[Prompt] → Veo → [Video] → PromptHMR → [SMPL-X] → GMR → [Robot Motion]
+-```
+-
+-## Project Structure
+-
+-```
+-video2robot/
+-├── video2robot/            # Main package
+-│   ├── config.py           # Configuration management
+-│   ├── pipeline.py         # (Optional) Python API pipeline
+-│   ├── cli.py              # Console entrypoint for installation
+-│   ├── video/              # Video generation/processing
+-│   │   └── veo_client.py   # Google Veo API
+-│   ├── pose/               # Pose extraction (PromptHMR wrapper)
+-│   │   └── extractor.py
+-│   └── robot/              # Robot conversion (GMR wrapper)
+-│       └── retargeter.py
+-│
+-├── scripts/                # CLI scripts
+-│   ├── run_pipeline.py     # Full pipeline
+-│   ├── generate_video.py   # Veo video generation
+-│   ├── extract_pose.py     # Pose extraction
+-│   └── convert_to_robot.py # Robot conversion
+-│   └── visualize.py        # Result visualization
+-│
+-├── configs/                # Configuration files
+-├── data/                   # Data (gitignored)
+-│
+-└── third_party/            # External dependencies (submodules)
+-    ├── PromptHMR/          # Pose extraction model
+-    └── GMR/                # Motion retargeting
+-```
++需要两个 conda 环境：
+ 
+-## Installation
++- `phmr`：视频生成 + 姿态提取 + Web + robot-viser
++- `gmr`：机器人重定向 + MuJoCo 可视化/录制
+ 
+-This project requires **two conda environments**: `gmr` and `phmr`.
++### 1) 克隆（含 submodule）
+ 
+ ```bash
+-# Clone repo (with submodules)
+-git clone --recursive https://github.com/AIM-Intelligence/video2robot.git
++git clone --recursive https://github.com/hope5hope/video2robot.git
+ cd video2robot
+-
+-# Or initialize submodules after cloning
++# 或
+ git submodule update --init --recursive
+ ```
+ 
+-### 1. GMR Environment (Robot Retargeting)
++### 2) GMR 环境
+ 
+ ```bash
+ conda create -n gmr python=3.10 -y
+@@ -79,136 +45,152 @@ conda activate gmr
+ pip install -e .
+ ```
+ 
+-For details, see [GMR README](third_party/GMR/README.md).
+-
+-### 2. PromptHMR Environment (Pose Extraction)
++### 3) PromptHMR 环境（4090/常规 GPU）
+ 
+-**For Blackwell GPU (sm_120) users:**
+ ```bash
+-conda create -n phmr python=3.11 -y
++conda create -n phmr python=3.10 -y
+ conda activate phmr
+ cd third_party/PromptHMR
+-bash scripts/install_blackwell.sh
++bash scripts/install.sh --pt_version=2.4
+ ```
+ 
+-**For other GPUs (Ampere, Hopper, etc.):**
++> 若 `install.sh` 在你的机器上不稳定，可参考 `01春晚舞蹈机器人复刻.md` 的手动安装方案。
++
++## API 配置
++
++在仓库根目录创建 `.env`：
++
+ ```bash
+-conda create -n phmr python=3.10 -y
+-conda activate phmr
+-cd third_party/PromptHMR
+-pip install -e .
++cp .env.example .env
+ ```
+ 
+-For details, see [PromptHMR README](third_party/PromptHMR/README.md).
++常用变量：
++
++- `SEEDANCE_API_KEY=...`
++- `GOOGLE_API_KEY=...`
++- `OPENAI_API_KEY=...`
+ 
+-## Usage
++## 常用命令
+ 
+-> **Note**: Scripts automatically switch to the appropriate conda environment (`gmr` or `phmr`) as needed. Just ensure both environments are installed - no need to manually activate them.
++### 一键流水线
+ 
+ ```bash
+-# Full pipeline (action → robot motion) - BASE_PROMPT auto-applied
+-python scripts/run_pipeline.py --action "Action sequence:
+-The subject walks forward with four steps."
++python scripts/run_pipeline.py --action "动作序列：角色向前走四步"
++```
+ 
+-# Use Sora
+-python scripts/run_pipeline.py --action "..." --provider sora
++### 从已有视频开始
+ 
+-# Start from existing video (video.mp4 → robot motion)
++```bash
+ python scripts/run_pipeline.py --video /path/to/video.mp4
++```
+ 
+-# Resume from existing project
+-python scripts/run_pipeline.py --project data/video_001
++### 分步运行
+ 
+-# Run individual steps
+-python scripts/generate_video.py --action "Action sequence: The subject walks forward."
++```bash
++python scripts/generate_video.py --model seedance --action "动作序列：角色向前走四步"
+ python scripts/extract_pose.py --project data/video_001
+-python scripts/convert_to_robot.py --project data/video_001
++python scripts/convert_to_robot.py --project data/video_001 --all-tracks
++```
++
++### 可视化（CLI）
+ 
+-# Visualization (auto env switching)
+-python scripts/visualize.py --project data/video_001
++```bash
+ python scripts/visualize.py --project data/video_001 --pose
++python scripts/visualize.py --project data/video_001 --robot-viser --robot-all
+ python scripts/visualize.py --project data/video_001 --robot
+ ```
+ 
+ ## Web UI
+ 
+ ```bash
+-# Run server (from video2robot root)
+-uvicorn web.app:app --host 0.0.0.0 --port 8000
++conda activate phmr
++python -m pip install -U fastapi "uvicorn[standard]" jinja2 python-multipart
+ 
+-# Access in browser
+-# http://localhost:8000
++# 建议固定端口，避免 iframe 随机端口拒绝连接
++pkill -f "video2robot/visualization/robot_viser.py"
++export VISER_FIXED_PORT=8789
++
++cd /root/gpufree-data/video2robot
++python -m uvicorn web.app:app --host 0.0.0.0 --port 8000
+ ```
+ 
+-Features:
+-- Prompt input → Video generation → Pose extraction → Robot conversion automatic pipeline
+-- Video upload support
+-- Veo/Sora model selection
+-- 3D visualization (viser)
+-- Video-3D synchronized playback
++浏览器打开：`http://localhost:8000`
+ 
+-## Environment Setup
++## MuJoCo 录制
+ 
+-```bash
+-# Create .env file
+-cp .env.example .env
++### 单机器人
+ 
+-# Set API key
+-echo "GOOGLE_API_KEY=your-api-key" >> .env
++```bash
++conda activate gmr
++cd third_party/GMR
++python scripts/vis_robot_motion.py \
++  --robot unitree_g1 \
++  --robot_motion_path /root/gpufree-data/video2robot/data/video_005/robot_motion.pkl \
++  --record_video \
++  --video_path /root/gpufree-data/video2robot/data/video_005/mujoco_robot.mp4
+ ```
+ 
+-## Supported Robots
++### 多机器人（本仓库新增）
+ 
+-| Robot | ID | DOF |
+-|-------|-----|-----|
+-| Unitree G1 | `unitree_g1` | 29 |
+-| Unitree H1 | `unitree_h1` | 19 |
+-| Booster T1 | `booster_t1` | 23 |
++```bash
++conda activate gmr
++cd third_party/GMR
++python scripts/vis_robot_motion_multi.py \
++  --robot unitree_g1 \
++  --robot_motion_paths \
++    /root/gpufree-data/video2robot/data/video_005/robot_motion_track_1.pkl \
++    /root/gpufree-data/video2robot/data/video_005/robot_motion_track_2.pkl \
++  --record_video \
++  --max_seconds 10 \
++  --camera_azimuth 0 \
++  --video_path /root/gpufree-data/video2robot/data/video_005/mujoco_multi_robot_10s_front.mp4
++```
+ 
+-See [GMR README](third_party/GMR/README.md) for full list
++可选相机参数（轻微拉近）：
+ 
+-## Output Format
++- `--camera_distance_scale 0.82`
++- `--camera_elevation -8`
++- `--camera_lookat_y_offset 0.1`
+ 
+-```python
+-# robot_motion.pkl
+-{
+-    "fps": 30.0,
+-    "robot_type": "unitree_g1",
+-    "num_frames": 240,
+-    "root_pos": np.ndarray,    # (N, 3)
+-    "root_rot": np.ndarray,    # (N, 4) quaternion xyzw
+-    "dof_pos": np.ndarray,     # (N, DOF)
+-}
+-```
++## Submodule 与补丁策略（推荐）
+ 
++本项目建议保留 submodule，不建议把 `third_party` 全量并入主仓库（体积会非常大）。
+ 
+-## TODO
++建议交付方式：
+ 
+-- [ ] **`lastFrame` (Start/End Frame Interpolation)** - Veo 3.1 only
+-  - Start image + End image → Generate video smoothly connecting the two
+-  - Useful for "Pose A → Pose B" robot motion videos
++1. 记录基线 commit
++2. 导出主仓库与 submodule patch
++3. 在目标机器应用 patch
+ 
+-- [ ] **`referenceImages` (Reference Images)** - Veo 3.1 only
+-  - Up to 3 reference images to maintain character/style
+-  - Generate videos with specific character performing actions
++### 记录基线 commit
+ 
+-## Acknowledgements
++```bash
++git rev-parse HEAD
++git -C third_party/PromptHMR rev-parse HEAD
++git -C third_party/GMR rev-parse HEAD
++```
+ 
+-This project builds upon the following excellent open source projects:
++### 生成 patch
+ 
+-- [PromptHMR](https://github.com/yufu-wang/PromptHMR): 3D human mesh recovery from video
+-- [GMR](https://github.com/YanjieZe/GMR): general motion retargeting framework
++```bash
++mkdir -p patches
++git diff > patches/main.patch
++git -C third_party/PromptHMR diff > patches/prompthmr.patch
++git -C third_party/GMR diff > patches/gmr.patch
++```
+ 
+-## License
++### 应用 patch（在同基线上）
+ 
+-This project depends on third-party libraries with their own licenses:
++```bash
++git apply patches/main.patch
++git -C third_party/PromptHMR apply ../../patches/prompthmr.patch
++git -C third_party/GMR apply ../../patches/gmr.patch
++```
+ 
+-- **[GMR](third_party/GMR/LICENSE)**: MIT License
+-- **[PromptHMR](third_party/PromptHMR/LICENSE)**: Non-Commercial Scientific Research Use Only
++## 许可证说明
+ 
+-Please review both licenses before use.
++- 主仓库代码：MIT
++- `PromptHMR`：非商业科研限制
++- `GMR`：MIT
+ 
+-> The core video2robot code is MIT-licensed, but using this
+-> repository end-to-end (including PromptHMR) inherits PromptHMR's
+-> **Non-Commercial Scientific Research Only** restriction. Commercial use
+-> requires obtaining appropriate permission from the PromptHMR authors.
++使用前请确认第三方许可证要求。
+diff --git a/scripts/generate_video.py b/scripts/generate_video.py
+index 6c1b0ab..295c317 100644
+--- a/scripts/generate_video.py
++++ b/scripts/generate_video.py
+@@ -1,6 +1,6 @@
+ #!/usr/bin/env python3
+ """
+-Generate video using Google Veo or OpenAI Sora
++Generate video using Seedance / Google Veo / OpenAI Sora
+ 
+ Usage:
+     # With action (uses BASE_PROMPT template for robot retargeting)
+@@ -12,6 +12,9 @@ Usage:
+     # With raw prompt (no template)
+     python scripts/generate_video.py --raw-prompt "A person dancing"
+ 
++    # With Seedance
++    python scripts/generate_video.py --model seedance --action "..."
++
+     # With Sora
+     python scripts/generate_video.py --model sora --action "..."
+ 
+@@ -32,14 +35,14 @@ from video2robot.utils import ensure_project_dir
+ 
+ def main():
+     parser = argparse.ArgumentParser(
+-        description="Generate video using Veo or Sora",
++        description="Generate video using Seedance / Veo / Sora",
+         formatter_class=argparse.RawDescriptionHelpFormatter,
+     )
+ 
+     # Model selection
+-    parser.add_argument("--model", "-m", default="veo",
+-                        choices=["veo", "sora", "sora-pro"],
+-                        help="Video generation model (default: veo)")
++    parser.add_argument("--model", "-m", default="seedance",
++                        choices=["seedance", "veo", "sora", "sora-pro"],
++                        help="Video generation model (default: seedance)")
+ 
+     # Prompt options (mutually exclusive)
+     prompt_group = parser.add_argument_group("Prompt options")
+@@ -52,20 +55,20 @@ def main():
+     # Common arguments
+     parser.add_argument("--name", "-n", help="Project folder name (default: video_XXX)")
+     parser.add_argument("--duration", type=int, default=8,
+-                        help="Duration in seconds (Veo: 4-8, Sora: 4/8/12)")
++                        help="Duration in seconds (Seedance: e.g. 8, Veo: 4-8, Sora: 4/8/12)")
+ 
+-    # Veo-specific arguments
+-    veo_group = parser.add_argument_group("Veo options")
++    # Seedance/Veo arguments
++    veo_group = parser.add_argument_group("Seedance/Veo options")
+     veo_group.add_argument("--image", "-i", help="Input image for image-to-video (Veo only)")
+     veo_group.add_argument("--veo-model", default="veo-3.1-fast-generate-preview",
+                            help="Veo model: veo-3.1-generate-preview, veo-3.1-fast-generate-preview, "
+                                 "veo-3.0-generate-001, veo-3.0-fast-generate-001, veo-2.0-generate-001")
+     veo_group.add_argument("--aspect-ratio", default="16:9", choices=["16:9", "9:16"],
+-                           help="Aspect ratio for Veo")
++                           help="Aspect ratio for Seedance/Veo")
+     veo_group.add_argument("--seed", type=int, help="Random seed (Veo only)")
+     veo_group.add_argument("--negative", "-neg", help="Negative prompt (Veo only)")
+     veo_group.add_argument("--resolution", choices=["720p", "1080p"],
+-                           help="Resolution (Veo3+, 1080p requires 8s)")
++                           help="Resolution (Seedance/Veo)")
+     veo_group.add_argument("--person", default="allow_all",
+                            choices=["allow_all", "allow_adult", "dont_allow"],
+                            help="Person generation (Veo only)")
+@@ -97,6 +100,8 @@ def main():
+     if args.model in ("sora", "sora-pro"):
+         provider = "sora"
+         sora_model_id = "sora-2-pro" if args.model == "sora-pro" else "sora-2"
++    elif args.model == "seedance":
++        provider = "seedance"
+     else:
+         provider = "veo"
+ 
+@@ -123,6 +128,28 @@ def main():
+                 "duration_seconds": args.duration,
+             },
+         }
++    elif provider == "seedance":
++        from video2robot.video import SeedanceClient
++        client = SeedanceClient()
++        client.generate(
++            prompt=final_prompt,
++            output_path=str(output_path),
++            aspect_ratio=args.aspect_ratio,
++            resolution=args.resolution or "720p",
++            duration_seconds=args.duration,
++        )
++        metadata = {
++            "created_at": datetime.now().isoformat(),
++            "action": action_text,
++            "prompt": final_prompt,
++            "model": args.model,
++            "provider": "seedance",
++            "seedance": {
++                "aspect_ratio": args.aspect_ratio,
++                "resolution": args.resolution or "720p",
++                "duration_seconds": args.duration,
++            },
++        }
+     else:
+         from video2robot.video import VeoClient
+         client = VeoClient(model_id=args.veo_model)
+diff --git a/scripts/run_pipeline.py b/scripts/run_pipeline.py
+index 8ace3f1..92d4b54 100644
+--- a/scripts/run_pipeline.py
++++ b/scripts/run_pipeline.py
+@@ -7,7 +7,7 @@ Automatically handles conda environment switching:
+ - Step 3: Runs in gmr environment (GMR retargeting)
+ 
+ Usage:
+-    # From action with Veo (default) - uses BASE_PROMPT template
++    # From action with Seedance (default) - uses BASE_PROMPT template
+     python scripts/run_pipeline.py --action "Action sequence:
+     The subject walks forward with four steps."
+ 
+@@ -48,7 +48,7 @@ def run_video_generation(
+     model: str = "veo",
+     size: str = "1280x720",
+ ):
+-    """Run video generation (Veo or Sora) in phmr env via subprocess."""
++    """Run video generation (Seedance/Veo/Sora) in phmr env via subprocess."""
+     video_path = project_dir / "original.mp4"
+     if video_path.exists() and not force:
+         print(f"[Step 1/3] Video exists: {video_path} (use --force to regenerate)")
+@@ -87,7 +87,14 @@ def run_video_generation(
+     else:
+         argv.extend(["--veo-model", veo_model, "--aspect-ratio", aspect_ratio])
+ 
+-    model_name = "Sora Pro" if model == "sora-pro" else ("Sora" if model == "sora" else "Veo")
++    if model == "sora-pro":
++        model_name = "Sora Pro"
++    elif model == "sora":
++        model_name = "Sora"
++    elif model == "veo":
++        model_name = "Veo"
++    else:
++        model_name = "Seedance"
+     print(f"\n[Step 1/3] Generating video with {model_name} (env={phmr_env})...")
+     print(f"[Step 1/3] Command: {' '.join(argv)}")
+     run_in_conda(phmr_env, argv, cwd=PROJECT_ROOT)
+@@ -203,11 +210,11 @@ def main():
+ 
+     # Video generation options
+     video_group = parser.add_argument_group("Video Generation")
+-    video_group.add_argument("--model", "-m", default="veo",
+-                             choices=["veo", "sora", "sora-pro"],
+-                             help="Video generation model (default: veo)")
++    video_group.add_argument("--model", "-m", default="seedance",
++                             choices=["seedance", "veo", "sora", "sora-pro"],
++                             help="Video generation model (default: seedance)")
+     video_group.add_argument("--duration", type=int, default=8,
+-                             help="Video duration in seconds (Veo: 4-8, Sora: 4/8/12)")
++                             help="Video duration in seconds (Seedance: e.g. 8, Veo: 4-8, Sora: 4/8/12)")
+     # Veo-specific
+     video_group.add_argument("--veo-model", default="veo-3.1-fast-generate-preview", help="Veo model ID")
+     video_group.add_argument("--aspect-ratio", default="16:9", choices=["16:9", "9:16"],
+diff --git a/scripts/visualize.py b/scripts/visualize.py
+index e7f4160..25b5315 100644
+--- a/scripts/visualize.py
++++ b/scripts/visualize.py
+@@ -109,6 +109,7 @@ def visualize_robot_viser(
+     robot_type: str | None = None,
+     track_index: int = 1,
+     all_tracks: bool = False,
++    material_mode: str = "color",
+ ):
+     """Visualize robot motion in PromptHMR's viser scene (video + camera frustums)."""
+     if twist:
+@@ -172,6 +173,8 @@ def visualize_robot_viser(
+         argv.append("--no-floor")
+     if robot_type:
+         argv.extend(["--robot-type", str(robot_type)])
++    if material_mode:
++        argv.extend(["--material-mode", str(material_mode)])
+ 
+     print("[RobotViser] Starting robot visualization in viser...")
+     print(f"[RobotViser] Env: {phmr_env}")
+@@ -241,7 +244,8 @@ def main():
+     parser.add_argument("--subsample", type=int, default=1, help="Subsample frames for visualization (robot-viser)")
+     parser.add_argument("--cube-size", type=float, default=0.03, help="Cube size (meters) for each link (robot-viser)")
+     parser.add_argument("--proxy", action="store_true", help="Use proxy cubes instead of robot meshes (robot-viser)")
+-    parser.add_argument("--img-maxsize", type=int, default=320, help="Max image size for frustum textures (robot-viser)")
++    parser.add_argument("--img-maxsize", type=int, default=0, help="Max image size for frustum textures (robot-viser, 0 means no resize)")
++    parser.add_argument("--material-mode", choices=["color", "metal"], default="color", help="Robot appearance in robot-viser")
+     parser.add_argument("--no-floor", action="store_true", help="Disable floor rendering (robot-viser)")
+     parser.add_argument("--floor-margin", type=float, default=1.5, help="Floor margin around trajectory (robot-viser)")
+     parser.add_argument("--frustum-scale", type=float, default=0.4, help="Video camera frustum scale (robot-viser)")
+@@ -281,6 +285,7 @@ def main():
+             robot_type=args.robot_type,
+             track_index=args.robot_track,
+             all_tracks=args.robot_all,
++            material_mode=args.material_mode,
+         )
+     elif args.robot:
+         visualize_robot(project_dir, args.robot_type or "unitree_g1", gmr_env=args.gmr_env, twist=args.twist)
+diff --git a/third_party/GMR b/third_party/GMR
+--- a/third_party/GMR
++++ b/third_party/GMR
+@@ -1 +1 @@
+-Subproject commit 069b4fd48f440e813b2b4d69255c70f53e5f83fb
++Subproject commit 069b4fd48f440e813b2b4d69255c70f53e5f83fb-dirty
+diff --git a/third_party/PromptHMR b/third_party/PromptHMR
+--- a/third_party/PromptHMR
++++ b/third_party/PromptHMR
+@@ -1 +1 @@
+-Subproject commit 4f8915c5b9603344c56e95fadb9a01a23ba2272d
++Subproject commit 4f8915c5b9603344c56e95fadb9a01a23ba2272d-dirty
+diff --git a/video2robot/config.py b/video2robot/config.py
+index a3e846d..f807383 100644
+--- a/video2robot/config.py
++++ b/video2robot/config.py
+@@ -25,7 +25,9 @@ PROMPTHMR_CHECKPOINT_DIR = PROMPTHMR_DIR / "data" / "pretrain"
+ PROMPTHMR_BODY_MODELS_DIR = PROMPTHMR_DIR / "data" / "body_models"
+ 
+ # Model paths (GMR)
+-GMR_BODY_MODELS_DIR = GMR_DIR / "assets" / "body_models"
++# GMR expects a body-model root containing subfolders like `smplx/`.
++# Reuse PromptHMR's downloaded body models by default.
++GMR_BODY_MODELS_DIR = PROMPTHMR_BODY_MODELS_DIR
+ 
+ 
+ @dataclass
+@@ -54,6 +56,18 @@ class SoraConfig:
+     max_wait_time: float = 600.0
+ 
+ 
++@dataclass
++class SeedanceConfig:
++    """Seedance video generation config"""
++    api_key: Optional[str] = field(default_factory=lambda: os.environ.get("SEEDANCE_API_KEY"))
++    base_url: str = "https://seedanceapi.org/v1"
++    aspect_ratio: str = "16:9"
++    resolution: str = "720p"
++    duration_seconds: int = 8
++    poll_interval: int = 10
++    max_wait_time: int = 600
++
++
+ @dataclass
+ class PoseConfig:
+     """Pose extraction config"""
+@@ -79,6 +93,7 @@ class PipelineConfig:
+     """Full pipeline config"""
+     veo: VeoConfig = field(default_factory=VeoConfig)
+     sora: SoraConfig = field(default_factory=SoraConfig)
++    seedance: SeedanceConfig = field(default_factory=SeedanceConfig)
+     pose: PoseConfig = field(default_factory=PoseConfig)
+     robot: RobotConfig = field(default_factory=RobotConfig)
+ 
+diff --git a/video2robot/utils.py b/video2robot/utils.py
+index 8a0528f..4aee6ca 100644
+--- a/video2robot/utils.py
++++ b/video2robot/utils.py
+@@ -2,6 +2,8 @@
+ 
+ from __future__ import annotations
+ 
++import os
++import shutil
+ import subprocess
+ from pathlib import Path
+ from typing import Optional
+@@ -84,7 +86,23 @@ def run_in_conda(env_name: str, argv: list[str], cwd: Path, *, raise_on_error: b
+         cwd: Working directory
+         raise_on_error: If True, raise RuntimeError on failure; if False, print error
+     """
+-    cmd = ["conda", "run", "--no-capture-output", "-n", env_name, *argv]
++    # Resolve conda executable robustly (interactive shells may have conda as a function only).
++    conda_exe = os.environ.get("CONDA_EXE") or shutil.which("conda")
++    if not conda_exe and Path("/opt/conda/bin/conda").exists():
++        conda_exe = "/opt/conda/bin/conda"
++
++    if conda_exe:
++        cmd = [conda_exe, "run", "--no-capture-output", "-n", env_name, *argv]
++    else:
++        msg = (
++            "Could not locate `conda` executable. "
++            "Set CONDA_EXE or ensure conda is in PATH."
++        )
++        if raise_on_error:
++            raise RuntimeError(msg)
++        print(f"[Error] {msg}")
++        print("[Info] Falling back to current environment.")
++        cmd = argv
+     try:
+         result = subprocess.run(cmd, cwd=str(cwd))
+     except KeyboardInterrupt:
+diff --git a/video2robot/video/__init__.py b/video2robot/video/__init__.py
+index 353b597..0ad6042 100644
+--- a/video2robot/video/__init__.py
++++ b/video2robot/video/__init__.py
+@@ -2,6 +2,7 @@
+ 
+ from video2robot.video.veo_client import VeoClient
+ from video2robot.video.sora_client import SoraClient
++from video2robot.video.seedance_client import SeedanceClient
+ 
+-__all__ = ["VeoClient", "SoraClient"]
++__all__ = ["VeoClient", "SoraClient", "SeedanceClient"]
+ 
+diff --git a/video2robot/visualization/robot_viser.py b/video2robot/visualization/robot_viser.py
+index 3466b46..3f83467 100644
+--- a/video2robot/visualization/robot_viser.py
++++ b/video2robot/visualization/robot_viser.py
+@@ -733,17 +733,24 @@ def main() -> None:
+     parser.add_argument("--track-index", type=int, help="Legacy single track index (1-based)")
+     parser.add_argument("--tracks", type=int, nargs="+", help="Specific track indices to visualize together")
+     parser.add_argument("--all-tracks", action="store_true", help="Visualize every available track simultaneously")
+-    parser.add_argument("--img-maxsize", type=int, default=320, help="Max image size for viser frustum textures (0 = no resize)")
++    parser.add_argument("--img-maxsize", type=int, default=0, help="Max image size for viser frustum textures (0 = no resize)")
+ 
+     parser.add_argument("--robot-type", default=None, help="Override robot type (default: from motion file)")
+     parser.add_argument("--robot-xml", default=None, help="Override MJCF xml path")
+     parser.add_argument("--proxy", action="store_true", help="Render as proxy cubes instead of real robot meshes")
+     parser.add_argument("--cube-size", type=float, default=0.03, help="Cube size (meters) when using --proxy")
++    parser.add_argument(
++        "--material-mode",
++        choices=["color", "metal"],
++        default="color",
++        help="Robot appearance: color=track colors, metal=original mesh color",
++    )
+ 
+     parser.add_argument("--no-floor", action="store_true", help="Disable floor rendering")
+     parser.add_argument("--floor-margin", type=float, default=1.5, help="Floor extent margin around trajectories (meters)")
+     parser.add_argument("--frustum-scale", type=float, default=0.4, help="Video camera frustum scale")
+     parser.add_argument("--frustum-fov", type=float, default=0.96, help="Video camera frustum FOV (radians)")
++    parser.add_argument("--frustum-image-stride", type=int, default=2, help="Update frustum image every N frames to reduce blur from bandwidth pressure")
+ 
+     parser.add_argument("--host", default="0.0.0.0", help="Viser server host (default: 0.0.0.0 for external access)")
+     parser.add_argument("--port", type=int, default=8789, help="Viser server port (default: 8789)")
+@@ -900,8 +907,9 @@ def main() -> None:
+         min=1,
+         max=60,
+         step=0.1,
+-        initial_value=float(video_fps) / float(args.subsample),
++        initial_value=min(float(video_fps) / float(args.subsample), 12.0),
+     )
++    last_frustum_image_idx = {"value": -1}
+ 
+     @gui_next_frame.on_click
+     def _(_) -> None:
+@@ -1045,13 +1053,14 @@ def main() -> None:
+             base_path = f"/robots/track_{entry.track_index}"
+             for k in range(num_links):
+                 lf = server.scene.add_frame(f"{base_path}/link_{k}", show_axes=False)
++                cube_color = entry.color if args.material_mode == "color" else (170, 170, 170)
+                 server.scene.add_mesh_simple(
+                     f"{base_path}/link_{k}/cube",
+                     vertices=cube_v,
+                     faces=cube_f,
+                     flat_shading=False,
+                     wireframe=False,
+-                    color=entry.color,
++                    color=cube_color,
+                 )
+                 entry.proxy_frames.append(lf)
+     else:
+@@ -1068,7 +1077,7 @@ def main() -> None:
+                 entry.body_frames[body_name] = server.scene.add_frame(frame_path, show_axes=False)
+                 for gi, geom in enumerate(geoms):
+                     mesh_copy = geom["trimesh"].copy()
+-                    color = entry.color if len(entries) > 1 else geom["color"]
++                    color = entry.color if args.material_mode == "color" else geom["color"]
+                     mesh_copy.visual = trimesh.visual.ColorVisuals(
+                         mesh=mesh_copy,
+                         face_colors=[*color, 255],
+@@ -1103,7 +1112,16 @@ def main() -> None:
+ 
+             if frustum.visible:
+                 try:
+-                    frustum.image = frames[vis_idx]
++                    stride = max(1, int(args.frustum_image_stride))
++                    should_update = (
++                        vis_idx == 0
++                        or vis_idx == (num_vis_frames - 1)
++                        or (vis_idx % stride == 0)
++                        or (not gui_playing.value)
++                    )
++                    if should_update and last_frustum_image_idx["value"] != vis_idx:
++                        frustum.image = frames[vis_idx]
++                        last_frustum_image_idx["value"] = vis_idx
+                 except Exception:
+                     pass
+ 
+diff --git a/web/routers/pipeline.py b/web/routers/pipeline.py
+index 11521b5..83f1dc1 100644
+--- a/web/routers/pipeline.py
++++ b/web/routers/pipeline.py
+@@ -21,7 +21,7 @@ class GenerateVideoRequest(BaseModel):
+     project: str
+     action: Optional[str] = None
+     raw_prompt: Optional[str] = None
+-    model: str = "veo-3.1-fast"  # veo-3.1-fast, veo-3.1, veo-3.0-fast, veo-3.0, veo-2.0, sora, sora-pro
++    model: str = "seedance"  # seedance, veo-3.1-fast, veo-3.1, veo-3.0-fast, veo-3.0, veo-2.0, sora, sora-pro
+     duration: int = 8
+ 
+ 
+@@ -44,7 +44,7 @@ class RunPipelineRequest(BaseModel):
+     action: Optional[str] = None
+     raw_prompt: Optional[str] = None
+     video_path: Optional[str] = None
+-    model: str = "veo-3.1-fast"
++    model: str = "seedance"
+     duration: int = 8
+     robot_type: str = "unitree_g1"
+     static_camera: bool = False
+diff --git a/web/routers/viser.py b/web/routers/viser.py
+index 9a6c2b5..ee65d4e 100644
+--- a/web/routers/viser.py
++++ b/web/routers/viser.py
+@@ -35,6 +35,7 @@ class StartViserRequest(BaseModel):
+     project: str
+     all_tracks: bool = True
+     twist: bool = False
++    material_mode: str = "color"
+ 
+ 
+ class StopViserRequest(BaseModel):
+@@ -50,6 +51,7 @@ async def start_viser(request: StartViserRequest, req: Request):
+             request.project,
+             all_tracks=request.all_tracks,
+             twist=request.twist,
++            material_mode=request.material_mode,
+         )
+ 
+         host = _resolve_host(req)
+diff --git a/web/static/js/main.js b/web/static/js/main.js
+index 848cc4d..d2d0459 100644
+--- a/web/static/js/main.js
++++ b/web/static/js/main.js
+@@ -39,6 +39,7 @@ let activeViserProject = null;
+ let viserStarting = false;
+ let viserFrameToken = null;
+ let viserFrameReady = false;
++let viserReconnectAttempts = 0;
+ 
+ // Elements
+ const projectList = document.getElementById('project-list');
+@@ -93,7 +94,7 @@ async function loadProjects() {
+ 
+ function renderProjectList(projects) {
+     if (projects.length === 0) {
+-        projectList.innerHTML = `<div class="px-4 py-8 text-center text-gray-500 text-sm">No projects</div>`;
++        projectList.innerHTML = `<div class="px-4 py-8 text-center text-gray-500 text-sm">暂无项目</div>`;
+         return;
+     }
+ 
+@@ -103,8 +104,8 @@ function renderProjectList(projects) {
+             <div class="flex items-center justify-between">
+                 <span class="font-medium text-sm text-gray-900">${p.name}</span>
+                 <div class="flex gap-1">
+-                    ${p.has_video ? '<span class="badge badge-success">Video</span>' : '<span class="badge badge-pending">Video</span>'}
+-                    ${p.has_pose ? '<span class="badge badge-success">Pose</span>' : '<span class="badge badge-pending">Pose</span>'}
++                    ${p.has_video ? '<span class="badge badge-success">视频</span>' : '<span class="badge badge-pending">视频</span>'}
++                    ${p.has_pose ? '<span class="badge badge-success">姿态</span>' : '<span class="badge badge-pending">姿态</span>'}
+                     ${p.has_robot ? `<span class="badge badge-success">${p.robot_type || 'Unitree G1'}</span>` : ''}
+                 </div>
+             </div>
+@@ -150,8 +151,8 @@ function renderProjectDetail(detail) {
+ 
+     // Status badges in header
+     detailBadges.innerHTML = `
+-        ${detail.has_video ? '<span class="badge badge-success">Video</span>' : '<span class="badge badge-pending">Video</span>'}
+-        ${detail.has_pose ? '<span class="badge badge-success">Pose</span>' : '<span class="badge badge-pending">Pose</span>'}
++        ${detail.has_video ? '<span class="badge badge-success">视频</span>' : '<span class="badge badge-pending">视频</span>'}
++        ${detail.has_pose ? '<span class="badge badge-success">姿态</span>' : '<span class="badge badge-pending">姿态</span>'}
+         ${detail.has_robot ? `<span class="badge badge-success">${detail.robot_type || 'Unitree G1'}</span>` : ''}
+     `;
+ 
+@@ -163,7 +164,7 @@ function renderProjectDetail(detail) {
+         html += `
+             <div>
+                 <p id="prompt-text" class="text-sm text-gray-700 line-clamp-2">${escapeHtml(detail.prompt)}</p>
+-                <button id="btn-toggle-prompt" class="text-xs text-blue-600 hover:underline mt-1">Show more</button>
++                <button id="btn-toggle-prompt" class="text-xs text-blue-600 hover:underline mt-1">展开</button>
+             </div>
+         `;
+     }
+@@ -176,7 +177,7 @@ function renderProjectDetail(detail) {
+             </video>
+         `;
+     } else {
+-        html += `<p class="text-gray-400 text-sm text-center py-12">No video</p>`;
++        html += `<p class="text-gray-400 text-sm text-center py-12">暂无视频</p>`;
+     }
+ 
+     html += '</div>';
+@@ -206,7 +207,7 @@ function setupPromptToggle() {
+     btn.addEventListener('click', () => {
+         expanded = !expanded;
+         text.classList.toggle('line-clamp-2', !expanded);
+-        btn.textContent = expanded ? 'Show less' : 'Show more';
++        btn.textContent = expanded ? '收起' : '展开';
+     });
+ }
+ 
+@@ -225,7 +226,7 @@ document.getElementById('btn-start-pipeline').addEventListener('click', async ()
+     const mode = document.querySelector('input[name="input-mode"]:checked').value;
+ 
+     btn.disabled = true;
+-    btn.textContent = 'Processing...';
++    btn.textContent = '处理中...';
+ 
+     await stopCurrentVisualization({ silent: true });
+ 
+@@ -233,9 +234,9 @@ document.getElementById('btn-start-pipeline').addEventListener('click', async ()
+     currentProject = null;
+     document.querySelectorAll('.project-item').forEach(el => el.classList.remove('selected'));
+ 
+-    detailTitle.textContent = 'Select Project';
++    detailTitle.textContent = '请选择项目';
+     detailBadges.innerHTML = '';
+-    detailContent.innerHTML = '<p class="text-gray-500 text-sm">Select a project from the left</p>';
++    detailContent.innerHTML = '<p class="text-gray-500 text-sm">请在左侧选择项目</p>';
+     detailActions.classList.add('hidden');
+ 
+     visualization.classList.add('hidden');
+@@ -249,7 +250,7 @@ document.getElementById('btn-start-pipeline').addEventListener('click', async ()
+             const staticCamera = isStaticCamera();
+ 
+             if (!action) {
+-                alert('Please enter action description');
++                alert('请输入动作描述');
+                 return;
+             }
+ 
+@@ -285,7 +286,7 @@ document.getElementById('btn-start-pipeline').addEventListener('click', async ()
+             const staticCamera = isStaticCamera();
+ 
+             if (!fileInput.files.length) {
+-                alert('Please select a video file');
++                alert('请选择视频文件');
+                 return;
+             }
+ 
+@@ -303,7 +304,7 @@ document.getElementById('btn-start-pipeline').addEventListener('click', async ()
+             });
+ 
+             if (!uploadRes.ok) {
+-                throw new Error('Upload failed');
++                throw new Error('上传失败');
+             }
+ 
+             // Start pose extraction
+@@ -321,10 +322,10 @@ document.getElementById('btn-start-pipeline').addEventListener('click', async ()
+         }
+ 
+     } catch (e) {
+-        alert(`Error: ${e.message}`);
++        alert(`错误：${e.message}`);
+     } finally {
+         btn.disabled = false;
+-        btn.textContent = 'Start Pipeline';
++        btn.textContent = '开始执行流程';
+     }
+ });
+ 
+@@ -472,19 +473,19 @@ function formatTime(seconds) {
+ 
+ function getTaskTypeLabel(type) {
+     const labels = {
+-        'generate_video': 'Video Generation',
+-        'extract_pose': 'Pose Extraction',
+-        'retarget': 'Robot Retarget',
++        'generate_video': '视频生成',
++        'extract_pose': '姿态提取',
++        'retarget': '机器人重定向',
+     };
+     return labels[type] || type;
+ }
+ 
+ function getStatusLabel(status) {
+     const labels = {
+-        'pending': 'Pending',
+-        'running': 'Running',
+-        'completed': 'Completed',
+-        'failed': 'Failed',
++        'pending': '等待中',
++        'running': '运行中',
++        'completed': '已完成',
++        'failed': '失败',
+     };
+     return labels[status] || status;
+ }
+@@ -512,7 +513,7 @@ document.getElementById('btn-extract-pose').addEventListener('click', async () =
+         startTaskPolling();
+         renderTaskStatus();
+     } catch (e) {
+-        alert(`Error: ${e.message}`);
++        alert(`错误：${e.message}`);
+     }
+ });
+ 
+@@ -526,14 +527,17 @@ document.getElementById('btn-retarget').addEventListener('click', async () => {
+         startTaskPolling();
+         renderTaskStatus();
+     } catch (e) {
+-        alert(`Error: ${e.message}`);
++        alert(`错误：${e.message}`);
+     }
+ });
+ 
+ // Visualization controls
+-async function openVisualization(project) {
++async function openVisualization(project, options = {}) {
++    const { forceRestart = false } = options;
+     if (!project) return;
+-    if (activeViserProject === project && viserFrameReady) {
++    if (forceRestart && activeViserProject === project) {
++        await stopCurrentVisualization({ silent: true });
++    } else if (activeViserProject === project && viserFrameReady) {
+         visualization.classList.remove('hidden');
+         viserLoading.classList.add('hidden');
+         return;
+@@ -543,10 +547,10 @@ async function openVisualization(project) {
+     const btn = document.getElementById('btn-visualize');
+     viserStarting = true;
+     btn.disabled = true;
+-    btn.textContent = 'Starting...';
++    btn.textContent = '启动中...';
+ 
+     visualization.classList.remove('hidden');
+-    showViserLoading('Starting viser server...');
++    showViserLoading('正在启动 3D 可视化服务...');
+ 
+     const requestedProject = project;
+ 
+@@ -554,6 +558,7 @@ async function openVisualization(project) {
+         const result = await api('POST', '/viser/start', {
+             project,
+             all_tracks: true,
++            material_mode: getRobotAppearanceMode(),
+         });
+ 
+         if (currentProject !== requestedProject) {
+@@ -569,12 +574,12 @@ async function openVisualization(project) {
+         if (session.url) {
+             setViserFrameSource(session.url);
+         } else {
+-            showViserLoading('Failed to get viser URL', true);
++            showViserLoading('未获取到可视化地址', true);
+         }
+     } catch (e) {
+         showViserLoading(e.message, true);
+     } finally {
+-        btn.textContent = 'Visualize';
++        btn.textContent = '可视化';
+         btn.disabled = false;
+         viserStarting = false;
+     }
+@@ -627,7 +632,7 @@ function resetVisualizationFrame() {
+ 
+ function setViserFrameSource(url) {
+     if (!url) {
+-        showViserLoading('Unable to set viser URL', true);
++        showViserLoading('无法设置可视化地址', true);
+         return;
+     }
+ 
+@@ -641,7 +646,8 @@ function setViserFrameSource(url) {
+ 
+     viserFrameToken = url;
+     viserFrameReady = false;
+-    showViserLoading('Connecting to viser...');
++    viserReconnectAttempts = 0;
++    showViserLoading('正在连接可视化服务...');
+     viserFrame.src = url;
+ }
+ 
+@@ -650,6 +656,7 @@ viserFrame.addEventListener('load', () => {
+         return;
+     }
+     viserFrameReady = true;
++    viserReconnectAttempts = 0;
+     viserLoading.classList.add('hidden');
+ });
+ 
+@@ -658,8 +665,29 @@ viserFrame.addEventListener('error', () => {
+         return;
+     }
+     viserFrameReady = false;
++    if (viserReconnectAttempts >= 2 || !currentProject) {
++        viserLoading.classList.remove('hidden');
++        viserLoading.innerHTML = '<span class="text-red-500">可视化连接失败，请点击“可视化”重试</span>';
++        return;
++    }
++    viserReconnectAttempts += 1;
+     viserLoading.classList.remove('hidden');
+-    viserLoading.innerHTML = '<span class="text-red-500">Retrying viser connection...</span>';
++    viserLoading.innerHTML = '<span class="text-red-500">可视化连接中断，正在重连...</span>';
++    setTimeout(async () => {
++        try {
++            const result = await api('POST', '/viser/start', {
++                project: currentProject,
++                all_tracks: true,
++                material_mode: getRobotAppearanceMode(),
++            });
++            const session = result.session || {};
++            if (session.url) {
++                setViserFrameSource(session.url);
++            }
++        } catch (e) {
++            viserLoading.innerHTML = `<span class="text-red-500">${e.message || '重连失败'}</span>`;
++        }
++    }, 1200);
+ });
+ 
+ // Helpers
+@@ -702,5 +730,20 @@ function isStaticCamera() {
+     return document.getElementById('toggle-static-camera').checked;
+ }
+ 
++function getRobotAppearanceMode() {
++    const el = document.getElementById('input-robot-appearance');
++    if (!el) return 'color';
++    return el.value === 'metal' ? 'metal' : 'color';
++}
++
++const robotAppearanceSelect = document.getElementById('input-robot-appearance');
++if (robotAppearanceSelect) {
++    robotAppearanceSelect.addEventListener('change', async () => {
++        if (!currentProject || !activeViserProject) return;
++        visualizationManuallyHidden = false;
++        await openVisualization(currentProject, { forceRestart: true });
++    });
++}
++
+ // Init
+ loadProjects();
+diff --git a/web/tasks.py b/web/tasks.py
+index cbcccb9..ebbdaf0 100644
+--- a/web/tasks.py
++++ b/web/tasks.py
+@@ -1,7 +1,9 @@
+ """Background task management."""
+ 
+ import asyncio
++import os
+ import re
++import shutil
+ import subprocess
+ import uuid
+ from dataclasses import dataclass, field
+@@ -209,12 +211,24 @@ class TaskManager:
+         "veo-2.0": "veo-2.0-generate-001",
+     }
+ 
++    def _resolve_conda_executable(self) -> str:
++        """Resolve conda executable robustly for non-interactive subprocesses."""
++        conda_exe = os.environ.get("CONDA_EXE") or shutil.which("conda")
++        if not conda_exe and Path("/opt/conda/bin/conda").exists():
++            conda_exe = "/opt/conda/bin/conda"
++        if not conda_exe:
++            raise RuntimeError(
++                "Could not locate `conda` executable. "
++                "Set CONDA_EXE or ensure conda is in PATH."
++            )
++        return conda_exe
++
+     async def run_generate_video(
+         self,
+         task: Task,
+         action: Optional[str] = None,
+         raw_prompt: Optional[str] = None,
+-        model: str = "veo-3.1-fast",
++        model: str = "seedance",
+         duration: int = 8,
+         phmr_env: str = "phmr",
+     ):
+@@ -235,18 +249,22 @@ class TaskManager:
+         )
+ 
+         try:
++            conda_exe = self._resolve_conda_executable()
+             script = PROJECT_ROOT / "scripts" / "generate_video.py"
+ 
+             # Determine model parameters
+             if model in self.VEO_MODEL_MAP:
+                 cli_model = "veo"
+                 veo_model_id = self.VEO_MODEL_MAP[model]
++            elif model == "seedance":
++                cli_model = "seedance"
++                veo_model_id = None
+             else:
+                 cli_model = model  # sora, sora-pro
+                 veo_model_id = None
+ 
+             cmd = [
+-                "conda", "run", "-n", phmr_env, "--no-capture-output",
++                conda_exe, "run", "-n", phmr_env, "--no-capture-output",
+                 "python", str(script),
+                 "--model", cli_model,
+                 "--name", task.project,
+@@ -431,12 +449,13 @@ class TaskManager:
+         )
+ 
+         try:
++            conda_exe = self._resolve_conda_executable()
+             from video2robot.config import DATA_DIR
+             project_dir = DATA_DIR / task.project
+ 
+             script = PROJECT_ROOT / "scripts" / "extract_pose.py"
+             cmd = [
+-                "conda", "run", "-n", phmr_env, "--no-capture-output",
++                conda_exe, "run", "-n", phmr_env, "--no-capture-output",
+                 "python", str(script),
+                 "--project", str(project_dir),
+             ]
+@@ -534,12 +553,13 @@ class TaskManager:
+         )
+ 
+         try:
++            conda_exe = self._resolve_conda_executable()
+             from video2robot.config import DATA_DIR
+             project_dir = DATA_DIR / task.project
+ 
+             script = PROJECT_ROOT / "scripts" / "convert_to_robot.py"
+             cmd = [
+-                "conda", "run", "-n", gmr_env, "--no-capture-output",
++                conda_exe, "run", "-n", gmr_env, "--no-capture-output",
+                 "python", str(script),
+                 "--project", str(project_dir),
+                 "--robot", robot_type,
+diff --git a/web/templates/index.html b/web/templates/index.html
+index eb68179..a6863ed 100644
+--- a/web/templates/index.html
++++ b/web/templates/index.html
+@@ -1,5 +1,5 @@
+ <!DOCTYPE html>
+-<html lang="en">
++<html lang="zh-CN">
+ <head>
+     <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@@ -23,18 +23,18 @@
+                 <!-- New Project Form -->
+                 <section id="new-project-form" class="bg-white rounded-lg border border-gray-200">
+                     <div class="px-4 py-3 border-b border-gray-200">
+-                        <h2 class="font-medium text-gray-900">New Project</h2>
++                        <h2 class="font-medium text-gray-900">新建项目</h2>
+                     </div>
+                     <div class="p-4 space-y-4">
+                         <!-- Mode Selection -->
+                         <div class="flex gap-4">
+                             <label class="flex items-center gap-2 cursor-pointer">
+                                 <input type="radio" name="input-mode" value="prompt" checked class="text-gray-900">
+-                                <span class="text-sm">Prompt</span>
++                                <span class="text-sm">文生视频</span>
+                             </label>
+                             <label class="flex items-center gap-2 cursor-pointer">
+                                 <input type="radio" name="input-mode" value="upload" class="text-gray-900">
+-                                <span class="text-sm">Upload</span>
++                                <span class="text-sm">上传视频</span>
+                             </label>
+                         </div>
+ 
+@@ -44,11 +44,11 @@
+                             <div class="flex items-center gap-4 mb-2">
+                                 <label class="flex items-center gap-2 cursor-pointer">
+                                     <input type="checkbox" id="toggle-base-prompt" class="rounded" checked>
+-                                    <span class="text-sm text-gray-600">Base Prompt</span>
++                                    <span class="text-sm text-gray-600">基础提示词模板</span>
+                                 </label>
+                                 <label class="flex items-center gap-2 cursor-pointer">
+                                     <input type="checkbox" id="toggle-static-camera" class="rounded" checked disabled>
+-                                    <span class="text-sm text-gray-600">Static Camera</span>
++                                    <span class="text-sm text-gray-600">静态机位</span>
+                                 </label>
+                             </div>
+                             <div id="base-prompt-display" class="hidden mb-3">
+@@ -56,15 +56,18 @@
+                                     class="w-full px-3 py-2 border border-gray-200 rounded text-xs bg-gray-50 text-gray-500 cursor-not-allowed resize-none"></textarea>
+                             </div>
+ 
+-                            <label class="block text-sm text-gray-600 mb-1">Action Description</label>
++                            <label class="block text-sm text-gray-600 mb-1">动作描述</label>
+                             <textarea id="input-action" rows="9"
+                                 class="w-full px-3 py-2 border border-gray-300 rounded text-sm focus:outline-none focus:border-gray-500"
+-                                placeholder="Action sequence:&#10;The subject walks forward with four steps."></textarea>
++                                placeholder="动作序列：&#10;角色向前走四步。"></textarea>
+ 
+                             <div class="mt-3 grid grid-cols-2 gap-2">
+                                 <div>
+-                                    <label class="block text-sm text-gray-600 mb-1">Model</label>
++                                    <label class="block text-sm text-gray-600 mb-1">模型</label>
+                                     <select id="input-model" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
++                                        <optgroup label="Seedance">
++                                            <option value="seedance" selected>Seedance</option>
++                                        </optgroup>
+                                         <optgroup label="Veo">
+                                             <option value="veo-3.1-fast">Veo 3.1 Fast</option>
+                                             <option value="veo-3.1">Veo 3.1</option>
+@@ -79,7 +82,7 @@
+                                     </select>
+                                 </div>
+                                 <div>
+-                                    <label class="block text-sm text-gray-600 mb-1">Duration</label>
++                                    <label class="block text-sm text-gray-600 mb-1">时长</label>
+                                     <select id="input-duration" class="w-full px-2 py-1.5 border border-gray-300 rounded text-sm">
+                                         <option value="4">4s</option>
+                                         <option value="8" selected>8s</option>
+@@ -90,14 +93,14 @@
+ 
+                         <!-- Upload Section -->
+                         <div id="upload-section" class="hidden">
+-                            <label class="block text-sm text-gray-600 mb-1">Video File</label>
++                            <label class="block text-sm text-gray-600 mb-1">视频文件</label>
+                             <input type="file" id="input-video" accept="video/*"
+                                 class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+                         </div>
+ 
+                         <!-- Robot Type -->
+                         <div>
+-                            <label class="block text-sm text-gray-600 mb-1">Robot Type</label>
++                            <label class="block text-sm text-gray-600 mb-1">机器人类型</label>
+                             <select id="input-robot" class="w-full px-3 py-2 border border-gray-300 rounded text-sm">
+                                 <option value="unitree_g1">Unitree G1 (29 DOF)</option>
+                                 <option value="unitree_h1" disabled>Unitree H1 (Coming Soon)</option>
+@@ -108,7 +111,7 @@
+ 
+                         <button id="btn-start-pipeline"
+                             class="w-full py-2 bg-gray-900 text-white text-sm rounded hover:bg-gray-700 disabled:bg-gray-300">
+-                            Start Pipeline
++                            开始执行流程
+                         </button>
+                     </div>
+                 </section>
+@@ -116,11 +119,11 @@
+                 <!-- Project List -->
+                 <section class="bg-white rounded-lg border border-gray-200">
+                     <div class="px-4 py-3 border-b border-gray-200">
+-                        <h2 class="font-medium text-gray-900">Projects</h2>
++                        <h2 class="font-medium text-gray-900">项目列表</h2>
+                     </div>
+                     <div id="project-list" class="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                         <div class="px-4 py-8 text-center text-gray-500 text-sm">
+-                            Loading...
++                            加载中...
+                         </div>
+                     </div>
+                 </section>
+@@ -132,30 +135,30 @@
+                 <section id="project-detail" class="bg-white rounded-lg border border-gray-200">
+                     <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+                         <div class="flex items-center gap-4">
+-                            <h2 id="detail-title" class="font-medium text-gray-900">Select Project</h2>
++                            <h2 id="detail-title" class="font-medium text-gray-900">请选择项目</h2>
+                             <div id="detail-badges" class="flex gap-1"></div>
+                         </div>
+                         <div id="detail-actions" class="flex gap-2 hidden">
+                             <button id="btn-extract-pose" class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50">
+-                                Extract Pose
++                                提取姿态
+                             </button>
+                             <button id="btn-retarget" class="px-3 py-1.5 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50">
+-                                Retarget
++                                转机器人
+                             </button>
+                             <button id="btn-visualize" class="px-3 py-1.5 text-sm bg-gray-900 text-white rounded hover:bg-gray-700 disabled:opacity-50">
+-                                Visualize
++                                可视化
+                             </button>
+                         </div>
+                     </div>
+                     <div id="detail-content" class="p-4">
+-                        <p class="text-gray-500 text-sm">Select a project from the left</p>
++                        <p class="text-gray-500 text-sm">请在左侧选择项目</p>
+                     </div>
+                 </section>
+ 
+                 <!-- Task Status -->
+                 <section id="task-status" class="bg-white rounded-lg border border-gray-200 hidden">
+                     <div class="px-4 py-3 border-b border-gray-200">
+-                        <h2 class="font-medium text-gray-900">Progress</h2>
++                        <h2 class="font-medium text-gray-900">任务进度</h2>
+                     </div>
+                     <div id="task-content" class="p-4">
+                         <!-- Task items will be added here -->
+@@ -164,14 +167,21 @@
+ 
+                 <!-- Visualization -->
+                 <section id="visualization" class="bg-white rounded-lg border border-gray-200 hidden">
+-                    <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+-                        <h2 class="font-medium text-gray-900">3D Visualization</h2>
+-                        <button id="btn-close-viser" class="text-sm text-gray-500 hover:text-gray-700">Close</button>
++                    <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between gap-3">
++                        <h2 class="font-medium text-gray-900">3D 可视化</h2>
++                        <div class="flex items-center gap-2">
++                            <label class="text-sm text-gray-600">机器人外观</label>
++                            <select id="input-robot-appearance" class="px-2 py-1 border border-gray-300 rounded text-sm">
++                                <option value="color" selected>彩色（按角色区分）</option>
++                                <option value="metal">铁皮原色（更真实）</option>
++                            </select>
++                            <button id="btn-close-viser" class="text-sm text-gray-500 hover:text-gray-700">关闭</button>
++                        </div>
+                     </div>
+                     <div class="relative" style="height: 600px;">
+                         <iframe id="viser-frame" class="w-full h-full border-0" src="about:blank"></iframe>
+                         <div id="viser-loading" class="absolute inset-0 flex items-center justify-center bg-gray-100">
+-                            <span class="text-gray-500">Starting viser server...</span>
++                            <span class="text-gray-500">正在启动 3D 服务...</span>
+                         </div>
+                     </div>
+                 </section>
+@@ -179,6 +189,6 @@
+         </div>
+     </main>
+ 
+-    <script src="/static/js/main.js?v=7"></script>
++    <script src="/static/js/main.js?v=11"></script>
+ </body>
+ </html>
+diff --git a/web/viser_manager.py b/web/viser_manager.py
+index 7980ec7..b554ded 100644
+--- a/web/viser_manager.py
++++ b/web/viser_manager.py
+@@ -1,7 +1,11 @@
+ """Viser process manager for 3D visualization."""
+ 
+ import asyncio
++import os
++import shutil
+ import socket
++import signal
++import subprocess
+ import uuid
+ from dataclasses import dataclass, field
+ from datetime import datetime
+@@ -25,6 +29,7 @@ class ViserSession:
+     started_at: datetime
+     all_tracks: bool = False
+     twist: bool = False
++    material_mode: str = "color"
+     state: str = "starting"
+     last_error: Optional[str] = None
+     stop_requested_at: Optional[datetime] = None
+@@ -47,6 +52,7 @@ class ViserSession:
+             "ended_at": self.ended_at.isoformat() if self.ended_at else None,
+             "all_tracks": self.all_tracks,
+             "twist": self.twist,
++            "material_mode": self.material_mode,
+             "last_error": self.last_error,
+         }
+ 
+@@ -54,7 +60,7 @@ class ViserSession:
+ class ViserManager:
+     """Manage viser visualization processes."""
+ 
+-    DEFAULT_PORT = 8789
++    DEFAULT_PORT = int(os.environ.get("VISER_FIXED_PORT", "8789"))
+ 
+     def __init__(self):
+         self._sessions: dict[str, ViserSession] = {}
+@@ -69,19 +75,62 @@ class ViserManager:
+         for project in to_remove:
+             self._sessions.pop(project, None)
+ 
++    def _cleanup_orphan_robot_viser_processes(self) -> None:
++        """Best-effort cleanup for orphan robot_viser.py processes."""
++        try:
++            result = subprocess.run(
++                ["pgrep", "-f", "video2robot/visualization/robot_viser.py"],
++                capture_output=True,
++                text=True,
++                check=False,
++            )
++        except Exception:
++            return
++
++        if result.returncode != 0 or not result.stdout.strip():
++            return
++
++        active_pids = {
++            int(session.process.pid)
++            for session in self._sessions.values()
++            if session.process and session.process.pid
++        }
++        for token in result.stdout.split():
++            try:
++                pid = int(token)
++            except ValueError:
++                continue
++            if pid in active_pids:
++                continue
++            try:
++                os.kill(pid, signal.SIGTERM)
++            except Exception:
++                continue
++
+     def _get_available_port(self) -> int:
+-        """Pick an available TCP port for viser."""
++        """Use a fixed port for browser stability."""
+         try:
+             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                 sock.bind(("", self.DEFAULT_PORT))
+                 return self.DEFAULT_PORT
+         except OSError:
+-            pass
++            raise RuntimeError(
++                f"Viser fixed port {self.DEFAULT_PORT} is busy. "
++                "Please stop other robot_viser processes or set VISER_FIXED_PORT."
++            )
+ 
+-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+-            sock.bind(("", 0))
+-            return sock.getsockname()[1]
++    def _resolve_conda_executable(self) -> str:
++        """Resolve conda executable robustly for web subprocesses."""
++        conda_exe = os.environ.get("CONDA_EXE") or shutil.which("conda")
++        if not conda_exe and Path("/opt/conda/bin/conda").exists():
++            conda_exe = "/opt/conda/bin/conda"
++        if not conda_exe:
++            raise FileNotFoundError(
++                "Could not locate `conda` executable. "
++                "Set CONDA_EXE or ensure conda is in PATH."
++            )
++        return conda_exe
+ 
+     async def start(
+         self,
+@@ -89,18 +138,25 @@ class ViserManager:
+         *,
+         all_tracks: bool = True,
+         twist: bool = False,
++        material_mode: str = "color",
+         phmr_env: str = "phmr",
+     ) -> ViserSession:
+         """Start viser for a project (non-blocking)."""
+         async with self._lock:
+             self._cleanup_finished_sessions()
++            self._cleanup_orphan_robot_viser_processes()
++            waiting_for: list[str] = []
+             existing = self._sessions.get(project)
+             if existing and existing.process.returncode is None and existing.state in {"starting", "running"}:
+-                return existing
+-
+-            waiting_for: list[str] = []
+-
+-            if project in self._sessions:
++                if (
++                    existing.all_tracks == all_tracks
++                    and existing.twist == twist
++                    and existing.material_mode == material_mode
++                ):
++                    return existing
++                await self._stop_locked(project)
++                waiting_for = [project]
++            elif project in self._sessions:
+                 await self._stop_locked(project)
+                 waiting_for.append(project)
+ 
+@@ -127,10 +183,11 @@ class ViserManager:
+         if not has_robot:
+             raise FileNotFoundError(f"Robot motion not found in {project}")
+ 
++        conda_exe = self._resolve_conda_executable()
+         port = self._get_available_port()
+         script = PROJECT_ROOT / "video2robot" / "visualization" / "robot_viser.py"
+         cmd = [
+-            "conda",
++            conda_exe,
+             "run",
+             "-n",
+             phmr_env,
+@@ -149,6 +206,7 @@ class ViserManager:
+             cmd.append("--all-tracks")
+         if twist:
+             cmd.append("--twist")
++        cmd.extend(["--material-mode", material_mode])
+ 
+         process = await asyncio.create_subprocess_exec(
+             *cmd,
+@@ -166,6 +224,7 @@ class ViserManager:
+             started_at=datetime.now(),
+             all_tracks=all_tracks,
+             twist=twist,
++            material_mode=material_mode,
+         )
+ 
+         async with self._lock:

@@ -1,0 +1,396 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>OpenClaw 仿真可视化前端</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="ambient ambient-a"></div>
+    <div class="ambient ambient-b"></div>
+
+    <div class="app-shell">
+      <header class="topbar panel">
+        <div class="brand">
+          <div class="logo-mark" aria-hidden="true">
+            <img src="./logo.png" alt="OpenClaw 仿真可视化标志" />
+          </div>
+          <div class="brand-copy">
+            <div class="eyebrow">OpenClaw 仿真可视化前端</div>
+            <h1>嵌入式机器人可视化界面</h1>
+          </div>
+        </div>
+
+        <div class="status-strip">
+          <div class="status-card">
+            <span id="connection-dot" class="status-dot status-mock"></span>
+            <span id="connection-label" class="status-label">模拟模式就绪</span>
+          </div>
+          <div class="status-card">
+            <span class="status-label dim">环境</span>
+            <span id="env-badge" class="badge">本地</span>
+          </div>
+          <button id="api-button" class="ghost-button" type="button">接口</button>
+        </div>
+      </header>
+
+      <main class="dashboard">
+        <section class="panel control-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-tag">指令</p>
+              <h2>发送机器人指令</h2>
+            </div>
+            <span class="mini-chip" id="session-chip">会话：-</span>
+          </div>
+
+          <label class="input-wrap" for="command-input">
+            <span class="input-label">自然语言指令</span>
+            <textarea id="command-input" rows="4" spellcheck="false" autocomplete="off" placeholder="例如：把苹果放到盘子上"></textarea>
+          </label>
+
+          <div class="input-actions">
+            <button id="submit-button" class="primary-button" type="button">执行指令</button>
+            <button id="stop-button" class="secondary-button" type="button">停止</button>
+            <span class="hint">Enter 提交，Shift+Enter 换行。</span>
+          </div>
+
+          <div class="preset-block">
+            <div class="preset-title">快捷预设</div>
+            <div id="preset-list" class="preset-list">
+              <button class="preset-chip" type="button" data-preset="请把玻璃杯扔到地上">请把玻璃杯扔到地上</button>
+              <button class="preset-chip" type="button" data-preset="请把巧克力放到盘里">请把巧克力放到盘里</button>
+              <button class="preset-chip" type="button" data-preset="将菜板上的苹果放置有苹果的架子上保存">将菜板上的苹果放置有苹果的架子上保存</button>
+            </div>
+          </div>
+
+          <div class="info-grid">
+            <article class="info-card">
+              <span class="info-label">当前状态</span>
+              <strong id="mode-value">空闲</strong>
+              <span id="mode-note" class="info-note">等待下一条指令。</span>
+            </article>
+            <article class="info-card">
+              <span class="info-label">解析任务</span>
+              <strong id="task-value">-</strong>
+              <span id="task-note" class="info-note">尚未解析。</span>
+            </article>
+          </div>
+
+          <div class="inventory-panel">
+            <div class="panel-head inventory-head">
+              <div>
+                <p class="section-tag">库存</p>
+                <h2>剩余物资与下单</h2>
+              </div>
+              <span id="inventory-updated" class="mini-chip">未加载</span>
+            </div>
+            <div id="inventory-alert" class="inventory-alert hidden"></div>
+            <div id="inventory-list" class="inventory-list"></div>
+          </div>
+        </section>
+
+        <section class="panel preview-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-tag">预览</p>
+              <h2>场景状态画布</h2>
+            </div>
+            <span id="preview-state" class="mini-chip accent">空闲</span>
+          </div>
+
+          <div class="preview-stage" id="preview-stage">
+            <div class="grid-overlay"></div>
+            <div class="glow-ring"></div>
+            <div class="robot-arm arm-a"></div>
+            <div class="robot-arm arm-b"></div>
+            <div class="scene-pod pod-a"></div>
+            <div class="scene-pod pod-b"></div>
+            <div class="scene-pod pod-c"></div>
+            <div class="scene-label label-a">相机画面</div>
+            <div class="scene-label label-b">分割叠层</div>
+            <div id="preview-figure" class="preview-figure">
+              <div class="figure-title">等待指令</div>
+              <div class="figure-copy">提交指令后，这里会切换为实时场景数据、叠层和目标标记。</div>
+              <div class="figure-stats">
+                <span class="figure-stat">状态：空闲</span>
+                <span class="figure-stat">轨迹：0 步</span>
+              </div>
+            </div>
+            <img id="preview-image" class="preview-image hidden" alt="场景预览" />
+            <div id="overlay-layer" class="overlay-layer"></div>
+          </div>
+
+          <div class="status-row">
+            <div class="status-item">
+              <span class="status-item-label">结果</span>
+              <strong id="result-value">暂无结果。</strong>
+            </div>
+            <div class="status-item">
+              <span class="status-item-label">调度</span>
+              <strong id="dispatch-value">等待中</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel trace-panel">
+          <div class="panel-head">
+            <div>
+              <p class="section-tag">轨迹</p>
+              <h2>执行时间线</h2>
+            </div>
+            <span id="trace-count" class="mini-chip">0 条事件</span>
+          </div>
+
+          <div id="trace-empty" class="empty-state">
+            <div class="empty-title">尚未执行</div>
+            <p>输入一条指令或点击预设，可以看到解析、调度、抓取估计和最终执行状态的动态流程。</p>
+            <ul>
+              <li>提交后输入框会保持焦点。</li>
+              <li>没有后端时也可以使用模拟模式。</li>
+              <li>接入真实后端时将通过 <code>/api/command</code> 连接。</li>
+            </ul>
+          </div>
+
+          <ol id="trace-list" class="trace-list"></ol>
+
+          <div class="logs-card">
+            <div class="logs-head">
+              <span class="section-tag">调试输出</span>
+              <span id="logs-count" class="mini-chip">0 行</span>
+            </div>
+            <pre id="logs-view" class="logs-view">暂无调试输出。</pre>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <template id="preset-template">
+      <button class="preset-chip" type="button"></button>
+    </template>
+
+    <template id="trace-template">
+      <li class="trace-item">
+        <div class="trace-index"></div>
+        <div class="trace-body">
+          <div class="trace-headline">
+            <span class="trace-name"></span>
+            <span class="trace-state"></span>
+          </div>
+          <div class="trace-detail"></div>
+        </div>
+      </li>
+    </template>
+
+    <script>
+      (() => {
+        const input = document.getElementById("command-input");
+        const submitButton = document.getElementById("submit-button");
+        const presetButtons = document.querySelectorAll(".preset-chip");
+        const apiBase = `${window.location.origin}/api`;
+        let activeEventSource = null;
+
+        const setText = (id, value) => {
+          const node = document.getElementById(id);
+          if (node) node.textContent = value;
+        };
+
+        const setClasses = (mode) => {
+          const dot = document.getElementById("connection-dot");
+          const label = document.getElementById("connection-label");
+          if (dot) {
+            dot.className = `status-dot status-${mode}`;
+          }
+          if (label) {
+            label.textContent =
+              mode === "live" ? "真实接口" : mode === "fail" ? "接口离线" : "模拟模式就绪";
+          }
+        };
+
+        const renderTrace = (trace) => {
+          const list = document.getElementById("trace-list");
+          const empty = document.getElementById("trace-empty");
+          const count = document.getElementById("trace-count");
+          if (!list || !empty || !count) return;
+          list.innerHTML = "";
+          const steps = Array.isArray(trace) ? trace : [];
+          count.textContent = `${steps.length} 条事件`;
+          empty.style.display = steps.length ? "none" : "block";
+          for (const [index, item] of steps.entries()) {
+            const li = document.createElement("li");
+            li.className = `trace-item is-${item.status || "pending"}`;
+            li.innerHTML = `
+              <div class="trace-index">${String(index + 1).padStart(2, "0")}</div>
+              <div class="trace-body">
+                <div class="trace-headline">
+                  <span class="trace-name"></span>
+                  <span class="trace-state"></span>
+                </div>
+                <div class="trace-detail"></div>
+              </div>
+            `;
+            li.querySelector(".trace-name").textContent = item.name || item.step || `step ${index + 1}`;
+            li.querySelector(".trace-state").textContent = item.status || "pending";
+            li.querySelector(".trace-detail").textContent = item.detail || item.message || "";
+            list.appendChild(li);
+          }
+        };
+
+        const renderLogs = (logs) => {
+          const count = document.getElementById("logs-count");
+          const view = document.getElementById("logs-view");
+          const lines = Array.isArray(logs) ? logs : [];
+          if (count) count.textContent = `${lines.length} 行`;
+          if (view) view.textContent = lines.length ? lines.join("\n") : "暂无调试输出。";
+        };
+
+        const renderPreview = (payload) => {
+          const previewState = document.getElementById("preview-state");
+          const previewImage = document.getElementById("preview-image");
+          const previewFigure = document.getElementById("preview-figure");
+          const resultValue = document.getElementById("result-value");
+          const dispatchValue = document.getElementById("dispatch-value");
+          const modeValue = document.getElementById("mode-value");
+          const modeNote = document.getElementById("mode-note");
+          const taskValue = document.getElementById("task-value");
+          const taskNote = document.getElementById("task-note");
+          const previewUrl =
+            payload.preview?.image_url ||
+            payload.preview_url ||
+            payload.image_url ||
+            "";
+          const mode = String(payload.status || "idle").toLowerCase();
+          const parsed = payload.parsed || payload.task || {};
+
+          if (previewState) previewState.textContent = mode;
+          if (modeValue) modeValue.textContent = mode;
+          if (modeNote) {
+            modeNote.textContent =
+              mode === "running"
+                ? "正在实时执行。"
+                : mode === "success"
+                  ? "指令执行成功。"
+                  : mode === "failure"
+                    ? "错误或策略拦截导致执行停止。"
+                    : "等待下一条指令。";
+          }
+          if (taskValue) taskValue.textContent = parsed.type || "-";
+          if (taskNote) {
+            taskNote.textContent =
+              parsed.type === "pick_place"
+                ? `${parsed.source || "-"} -> ${parsed.destination || "-"}`
+                : parsed.type
+                  ? `${parsed.type} 路由已选定。`
+                  : "尚未解析。";
+          }
+          if (resultValue) resultValue.textContent = payload.result || "暂无结果。";
+          if (dispatchValue) dispatchValue.textContent = payload.current_step || "等待中";
+
+          if (previewImage) {
+            if (previewUrl) {
+              previewImage.src = previewUrl.startsWith("http") ? previewUrl : `${window.location.origin}${previewUrl}`;
+              previewImage.classList.remove("hidden");
+              if (previewFigure) previewFigure.classList.add("hidden");
+            } else {
+              previewImage.classList.add("hidden");
+              if (previewFigure) previewFigure.classList.remove("hidden");
+            }
+          }
+        };
+
+        const applyPayload = (payload) => {
+          if (!payload) return;
+          if (payload.session_id) {
+            setText("session-chip", `会话：${payload.session_id}`);
+          }
+          setClasses(payload.status === "success" ? "live" : payload.status === "failure" ? "fail" : "mock");
+          renderTrace(payload.trace || []);
+          renderLogs(payload.logs || []);
+          renderPreview(payload);
+        };
+
+        const fallbackSubmit = async () => {
+          if (!input) return;
+          const command = (input.value || "").trim();
+          if (!command) return;
+          setText("dispatch-value", "提交中");
+          setText("result-value", "正在调度指令...");
+          setText("mode-value", "running");
+          setText("mode-note", "正在实时执行。");
+          try {
+            const response = await fetch(`${apiBase}/command`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ command }),
+            });
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}`);
+            }
+            const payload = await response.json();
+            applyPayload(payload);
+            if (activeEventSource) {
+              activeEventSource.close();
+              activeEventSource = null;
+            }
+            if (payload.status === "running" && payload.session_id) {
+              activeEventSource = new EventSource(`${apiBase}/session/${payload.session_id}/events`);
+              activeEventSource.onmessage = (event) => {
+                try {
+                  applyPayload(JSON.parse(event.data));
+                } catch {
+                  // Ignore malformed event payloads.
+                }
+              };
+              activeEventSource.onerror = () => {
+                if (activeEventSource) {
+                  activeEventSource.close();
+                  activeEventSource = null;
+                }
+              };
+            }
+          } catch (error) {
+            setText("dispatch-value", "接口离线");
+            setText("result-value", `提交失败：${String(error && error.message ? error.message : error)}`);
+          }
+        };
+
+        window.__openclawSubmitCommand = window.__openclawSubmitCommand || fallbackSubmit;
+        window.__openclawApplyPreset = window.__openclawApplyPreset || ((preset) => {
+          if (!input) return;
+          input.value = preset;
+          input.focus();
+          input.setSelectionRange(input.value.length, input.value.length);
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+
+        presetButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            const preset = button.dataset.preset || button.textContent.trim();
+            window.__openclawApplyPreset(preset);
+          });
+        });
+
+        if (input) {
+          input.addEventListener("keydown", (event) => {
+            if (event.isComposing) return;
+            if (event.key === "Enter" && !event.shiftKey) {
+              event.preventDefault();
+              window.__openclawSubmitCommand();
+            }
+          });
+        }
+
+        if (submitButton) {
+          submitButton.addEventListener("click", (event) => {
+            event.preventDefault();
+            window.__openclawSubmitCommand();
+          });
+        }
+      })();
+    </script>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+﻿name: vlm_grasp311
+channels:
+  - conda-forge
+  - pytorch
+  - nvidia
+dependencies:
+  - python=3.11
+  - pip
+  - cmake
+  - ninja
+  - cudatoolkit
+  - pip:
+      - -r requirements-py311.txt
