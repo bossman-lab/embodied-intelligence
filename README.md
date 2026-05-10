@@ -305,6 +305,78 @@
     </a>
   </div>
 
+
+---
+
+## 📚 课程目录 (Course Index)
+
+本仓库包含 **every-embodied 系统课程**的完整代码、文档与实验材料，共 20 个章节，1300+ 文件，覆盖从机器人基础到前沿 VLA 复现的全链路。
+
+| 章节 | 标题 | 文件数 | 关键词 |
+|:----:|:-----|:------:|:-------|
+| 01 | 具身智能概述 | 10 | 具身智能定义、发展史、技术栈全景 |
+| 02 | 机器人基础和控制、手眼协调 | 17 | UR5e、坐标变换、PID/LQR/MPC、手眼标定 |
+| 03 | 机器人硬件、LeRobot & RDK-X5 | 13 | LeRobot、地瓜 RDK-X5、SO101 机械臂、遥操作 |
+| 04 | 具身场景的计算机视觉、3D重建 | 3 | 3D重建、NeRF、SLAM |
+| 05 | 具身场景的深度和强化学习 | 4 | DQN、PPO、SAC、reward shaping |
+| 06 | 策略抓取或抓取VLA | 186 | VLA、SmolVLA、OpenVLA、RT系列、ACT/Pi0 |
+| 07 | 机器人操作、运动控制 | 66 | video2robot、PromptHMR、GMR、SMPL-X |
+| 08 | 具身导航及VLN | 31 | Vision-Language Navigation、Habitat |
+| 09 | 具身智能数据及评估基准 | 6 | Benchmark、评估指标、数据集 |
+| 10 | 仿真工具及仿真前沿 | 81 | MuJoCo、Isaac Sim、Genesis、SAPIEN |
+| 11 | 其他辅助工具 | 38 | ROS、MoveIt、ROS2、Docker |
+| 12 | 具身智能面试问题汇总 | 11 | 面试题、知识图谱 |
+| 13 | 其他前沿项目复现 | 175 | OpenVLA复现、Pi0、Diffusion Policy |
+| 14 | 相关参考 | 2 | 论文列表、参考资源 |
+| 15 | Challenge竞赛 | 20 | 竞赛方案、baseline |
+| 16 | 专题组队学习 | 524 | 6大专题(OpenClaw、Manipulation等) |
+| 17 | 具身世界模型 | 3 | 世界模型、JEPA |
+| 18 | 无人机专题 | 16 | 无人机控制、仿真 |
+| 19 | Datawhale每月组队学习 | 6 | 学习活动 |
+| 20 | 公众号短文宣发 | 2 | 宣传材料 |
+| — | English Version | 95 | English tutorials |
+| — | Web | 8 | Web 版界面 |
+
+## 🤖 T2 实战记录
+
+本仓库也包含我们在 **极夜 T2 (`Ryzen AI 9 HX370 + 96GB DDR5 + Radeon 890M`)** 上跑通课程的完整实战记录与踩坑指南，详见 [`hardware/t2-specs.md`](hardware/t2-specs.md) 和 [`experiments/`](experiments/)。
+
+### 已跑通项目
+| 实验 | 状态 | 详情 |
+|:----|:----:|:-----|
+| UR5e 机械臂抓取 | ✅ | MuJoCo 仿真，逆运动学 |
+| Cartpole - PID 控制 | ✅ | PyTorch 实现，收敛稳定 |
+| Cartpole - LQR 控制 | ✅ | 线性二次型最优控制 |
+| Cartpole - MPC 控制 | ✅ | 模型预测控制，滚动优化 |
+| Cartpole - PPO 强化学习 | ✅ | Stable-Baselines3，GPU 加速 |
+| Genesis 物理引擎安装 | ✅ | v0.4.6 + MuJoCo 3.8.0 |
+
+### ⚠️ 踩坑记录
+
+<h3>🎮 Gym render 兼容性</h3>
+<code>gymnasium</code> v0.26+ 移除了 `render(mode='rgb_array')`，需降级到 <code>gym==0.25.2</code>。
+
+<h3>🔤 Matplotlib 中文乱码</h3>
+`matplotlib` 需要中文字体路径配置，已提供修复 patch。
+
+<h3>🛡️ 金山毒霸误删</h3>
+Anaconda/Miniconda 的 `python.exe` 被金山毒霸误报为木马。**解决方案**：在毒霸中添加白名单或安装时暂时关闭实时防护。
+
+<h3>🌐 GitHub Clone 不稳定</h3>
+国内访问 GitHub 速度不稳定，建议使用代理或 tarball 下载替代 `git clone`。
+
+<h3>💤 T2 休眠导致进程中断</h3>
+T2 进入休眠后所有 python 进程被中断。**解决方案**：关闭休眠或使用网络唤醒（WOL）配合后台进程。
+
+<h3>🔧 Conda 编码问题</h3>
+`conda create` 在 Windows 下遇到 UnicodeDecodeError。**解决方案**：设置 <code>PYTHONUTF8=1</code> 环境变量。
+
+---
+
+*完整的课程内容源自 [Datawhale every-embodied](https://github.com/datawhalechina/every-embodied)，遵循 CC BY 4.0 许可协议。实战记录和 T2 适配部分由 @bossman-lab 贡献。*
+
+
+
   ## Star History
 
   [![Star History Chart](https://api.star-history.com/svg?repos=datawhalechina/every-embodied&type=date&legend=top-left)](https://www.star-history.com/#datawhalechina/every-embodied&type=date&legend=top-left)
@@ -335,6 +407,7 @@
   <br />
   你可以自由分享与改编本项目内容，但需保留来源署名。详细条款见 <a href="LICENSE">LICENSE</a>。
   </div>
+
 
 
 
