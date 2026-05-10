@@ -1,224 +1,127 @@
----
-title: "一台 96GB 迷你主机能跑具身智能吗？我在极夜 T2 上搭了全套仿真环境"
-published: false
-description: "从 MuJoCo 到 MPC 再到 PPO——在无 GPU 的 Windows 迷你主机上跑通具身智能课程的全过程，附带每个坑的解法"
-tags: emboodiedai, robotics, python, reinforcement-learning, beginners
----
+# 极夜T2（HX370）跑通 Every-Embodied 具身智能课程全记录
 
-# 一台 96GB 迷你主机能跑具身智能吗？
+> 一台没有独立显卡的迷你主机，能跑多少具身智能？我的答案是：**远比想象的多**。
 
-## 我在极夜 T2 上搭了全套仿真环境
+## 起点
 
----
+我有一台 **极夜T2 (DeskOne T2)** 迷你主机 —— AMD Ryzen AI 9 HX370 (12C/24T)、96GB DDR5、Radeon 890M iGPU。没有 NVIDIA 显卡。
 
-### 背景
+我开始学习 Datawhale 的 [every-embodied](https://github.com/datawhalechina/every-embodied) 课程，想看看这台机器能跑多远。
 
-几个月前我入手了一台 **极夜 T2**（DeskOne T2），配置是 Ryzen AI 9 HX370 + 96GB DDR5 + Radeon 890M。不是 Mac mini，不是 NUC，是一台国产迷你主机，没有 NVIDIA GPU。
+## 课程全景
 
-当时想的很简单：96GB 内存总能干点什么吧？
+课程从零到一覆盖具身智能全栈，共 **20 个章节，1300+ 文件**：
 
-后来发现了 Datawhale 的 [every-embodied](https://github.com/datawhalechina/every-embodied) 课程，一套中文具身智能入门教程，从机械臂抓取到 VLA（视觉-语言-动作）全覆盖。我心动了。
+| # | 章节 | 核心内容 |
+|:-:|:-----|:---------|
+| 01 | 具身智能概述 | 发展史、技术栈 |
+| 02 | 机器人控制 | UR5e、PID/LQR/MPC |
+| 03 | 硬件实战 | LeRobot、RDK-X5 |
+| 04 | 3D视觉 | 3D重建、NeRF |
+| 05 | 强化学习 | DQN/PPO/SAC |
+| 06 | VLA策略 | SmolVLA、OpenVLA、RT系列 |
+| **07** | **运动控制** | **video2robot、PromptHMR、GMR** |
+| 08 | 导航VLN | 视觉语言导航 |
+| 10 | 仿真工具 | MuJoCo、Genesis、Isaac Sim |
+| 16 | 专题学习 | 6大专题(524文件) |
 
-但这台机器没有 NVIDIA GPU，意味着：
-- 不能跑 VLA 训练（ACT/Pi0/SmolVLA）
-- 不能跑 Isaac GR00T
-- 不能跑 ManiSkill
+完整仓库：**[bossman-lab/embodied-intelligence](https://github.com/bossman-lab/embodied-intelligence)**
 
-**只能用 CPU 和 iGPU 硬扛。**
+## ✅ 已跑通实验
 
-事实证明，能跑的东西比想象中多。
+### UR5e 机械臂抓取仿真
+第一个 demo — 在 MuJoCo 中运行 UR5e 机械臂的逆运动学求解与抓取。T2 的 HX370 处理这个绰绰有余。
 
----
+### Cartpole 控制算法四连测
+我在这台机器上完整跑了四种控制算法，对比结果一目了然：
 
-### 架构：远程控制的完全体
+| 算法 | 类型 | 表现 |
+|:-----|:----:|:-----|
+| **PID** | 经典控制 | 稳定收敛，调参简单 |
+| **LQR** | 最优控制 | 比PID更平滑，有理论保证 |
+| **MPC** | 预测控制 | 滚动优化，抗干扰强 |
+| **PPO** | 强化学习 | 10万步训练~2分钟，零先验知识 |
 
-我还有一个 Hermes Agent 跑在 Linux 服务器上，两个机器在同一个局域网。目标是：
+PPO 能在 CPU-only 的 T2 上 2 分钟跑完 10 万步，出乎我的意料。虽然比不上 GPU（大概慢 3-5x），但对于学习和调试来说足够了。
 
+### Genesis + MuJoCo 环境
+Genesis 0.4.6 + MuJoCo 3.8.0 在 T2 上完美运行。作为物理引擎用于仿真和可视化没有任何问题。
+
+## ⏳ Ch07 video2robot 搭建
+
+目前正在搭建 text→video→pose→robot 端到端链路：
+- ✅ PromptHMR 克隆 (658 files)
+- ⏳ GMR 下载 (347MB，含权重)
+- ⏳ pip 依赖安装
+- ⏸️ 等待 SMPL-X 模型注册
+- ⏸️ 等待 Seedance API Key
+
+这个需要视频生成 API + 人体姿态模型 + SMPL-X body models，链路较长，但基础依赖都已就绪。
+
+## 🐛 6 个踩坑实录
+
+### 1️⃣ Gym render 兼容性
 ```
-Telegram 发消息 → Hermes → SSH → T2 (Win11) → 执行仿真
-```
-
-要实现这个链路，第一步是 **SSH 免密登录**。Windows 的 SSH 服务器默认用 `authorized_keys`，但管理员账户要用 `administrators_authorized_keys`。
-
-```bash
-# 在第个位置创建文件
-C:\ProgramData\ssh\administrators_authorized_keys
-# 权限：仅 SYSTEM 和 Administrators 可读
-```
-
-然后写了一个桥接脚本 `embodied_run.py`，用 Python 的 paramiko 库做 SSH 连接、远程执行、输出编码处理。
-
-最难搞的部分是**中文编码**。Windows 的 cmd 默认 CP936（GBK），而 Linux 端是 UTF-8。一条 `ssh` 命令的输出在终端里全是乱码。最终的解决方案是：
-
-```python
-# 在远程 Python 脚本开头加上
-sys.stdout.reconfigure(encoding='utf-8')
-# 在读取输出时用 UTF-8 解码
-```
-
----
-
-### 实验 1：UR5e 机械臂抓取（Ch01）
-
-第一个实验是 UR5e 六轴机械臂抓取方块，用的是 MuJoCo 仿真。
-
-```bash
-python examples/01_hello_every_embodied_mujoco.py --headless --autoplay --autoplay-rounds 1
-```
-
-结果：**1/1 抓取成功**。MuJoCo 在纯 CPU 模式下跑得飞快，完全没有压力。
-
-这时候信心爆棚——看来 96GB 内存 + CPU 就有戏。
-
----
-
-### 实验 2：Cartpole 三种控制算法（Ch02）
-
-Cartpole（倒立摆）是控制理论的 Hello World。课程给了三种算法：
-
-**PID 控制：** 经典的比例-积分-微分控制。调参过程很直观——`kp_cart=2, kd_cart=50, kp_pole=8, kd_pole=100`，400 步后输出结果图。
-
-**LQR（线性二次型调节器）：** 基于状态空间模型的最优控制。用 `scipy.linalg` 求解代数黎卡提方程，稳定效果比 PID 更好。
-
-**MPC（模型预测控制）：** 最复杂也最强大——用 CasADi 做数值优化，在每一步求解带约束的最优控制问题。
-
-```
-MPC 结果：Prediction horizon N=50，200步/17s，稳定到 0.007 rad
-PPO 结果：平均奖励 485.7/500（500 满分）
+gymnasium>=0.26 移除了 render(mode='rgb_array')
+→ 降级到 gym==0.25.2
 ```
 
-MPC 最有意思——虽然每步都要解一个数值优化问题，但在 CPU 上也能跑到 11.6 step/s。
+### 2️⃣ Matplotlib 中文变方块
+系统中文字体缺失，图表标签无法显示。
 
----
+**解决**：显式指定字体路径，已提供 `font_setup.patch`
 
-### 💥 踩坑实录
-
-这趟折腾遇到了不少问题，列出来供后来者参考。
-
-#### 🕳️ 坑 1：gym 0.26 移除了 rendering 模块
-
+### 3️⃣ Conda 创建就报错
 ```
-ImportError: cannot import name 'rendering' from 'gym.envs.classic_control'
+UnicodeDecodeError
 ```
+Windows 编码问题，设置 `PYTHONUTF8=1` 环境变量解决。
 
-gym 在 0.26 版本移除了自带的 `rendering` 模块。课程代码用的还是旧版 API。
+### 4️⃣ 金山毒霸把 Python 当木马
+没错，Miniconda 的 `python.exe` 被毒霸拦了。
 
-**解法：** 重写 `cartpole_env.py` 的 `render()` 方法。在 headless 模式下干脆返回假图像：
+**解决**：给毒霸加白名单，或者装的时候关实时防护。
 
-```python
-def render(self, mode='human'):
-    if self.state is None:
-        return None
-    if mode == 'rgb_array':
-        return np.zeros((400, 600, 3), dtype=np.uint8)
-    return None
-```
+### 5️⃣ 休眠 = 一切从头
+T2 进入休眠后，所有后台进程中断、SSH 断开。pip install 到一半的依赖全部白费。
 
-#### 🕳️ 坑 2：Matplotlib 在无 display 环境卡死
+**解决**：关闭休眠，或者用 WOL 唤醒后检查进程状态。
 
-运行 PID/LQR 脚本时，`plt.show()` 会尝试打开图形窗口，在 SSH 会话中直接卡死。
+### 6️⃣ GitHub Clone 像过山车
+国内直连 GitHub 速度忽好忽坏。PrompHMR 克隆时直接失败了好几次。
 
-**解法：** 设置 Agg 后端（非交互式）：
+**解决**：用代理（`-c http.proxy=http://127.0.0.1:7890`）或直接用 tarball + scp。
 
-```bash
-set MPLBACKEND=Agg
-python script.py
-```
+## 📊 T2 能跑 vs 不能跑
 
-#### 🕳️ 坑 3：中文字体缺失
+### ✅ 完全能跑
+- 所有仿真环境（MuJoCo、Genesis）
+- 经典控制算法（PID、LQR、MPC）
+- 强化学习小规模训练（Cartpole PPO、简单环境）
+- 3D 可视化（Viser、Trimesh、Open3D）
+- 代码开发、调试、Notebook 实验
 
-课程脚本用了 `AiDianFengYaHei（商用免费）-2.ttf` 这个字体文件，但 T2 上没有。结果 matplotlib 疯狂报警：
+### ❌ 不适合
+- **OpenVLA 等大模型训练** — 需要 NVIDIA GPU + CUDA
+- **大规模 RL 训练** — CPU 推理速度是瓶颈
+- **Genesis GPU 仿真** — 需要 CUDA 加速
 
-```
-UserWarning: Glyph 29366 (CJK UNIFIED IDEOGRAPH-72B6) missing from font(s) DejaVu Sans
-```
+### 💡 升级路径
+T2 有 **OCuLink 端口**，可以外接 NVIDIA 显卡（如 RTX 4090），届时这台机器将可以跑通几乎所有内容。
 
-**解法：** 注释掉字体加载代码，改用 DejaVu Sans。图表里的中文标注变成方框，但数值结果完全不受影响。
+## 学到的东西
 
-#### 🕳️ 坑 4：SSH 中文乱码
+1. **具身智能入门不一定要显卡** — 仿真、控制、基础 RL 都能在 CPU 上跑
+2. **国产迷你主机的潜力** — HX370 的 CPU 性能足够承担多数开发和实验
+3. **Windows 下做 ML 的坑是真多** — 编码、杀毒、休眠，每个都能卡你半天
+4. **GitHub API push 比 git remote-https 靠谱** — 墙内开发者的生存技巧
 
-这是最烦人的。Windows 的 sshd 默认用 CP936 编码，而 Linux 端是 UTF-8。无论是 subprocess 还是直接 ssh，输出都是乱码。
+## 仓库在这里
 
-**最终方案：** 用 Python 的 paramiko 库建立 SSH 连接，设置 `charset=utf-8`，远程脚本也强制 UTF-8 输出。
+➡️ **[bossman-lab/embodied-intelligence](https://github.com/bossman-lab/embodied-intelligence)**
 
-#### 🕳️ 坑 5：代理配置导致 GitHub 不通
-
-T2 上配了 `git config --global http.proxy http://192.168.3.135:7890`，但代理服务器经常挂掉。结果 git clone 总是 `Connection refused`。
-
-**解法：** 绕过代理：
-
-```bash
-git -c http.proxy= -c https.proxy= clone <repo_url>
-```
-
-#### 🕳️ 坑 6：金山毒霸
-
-这值得一提——T2 出厂预装了金山毒霸，SSH 端口扫描被当作攻击行为拦截了。花了整整三轮重启 + 安全模式扫描才彻底清除。具体步骤：
-
-1. 停止服务（KAVBootC、KDHacker 等）
-2. 删除驱动文件
-3. 清理注册表残留
-4. 重启验证
+包含完整课程代码 + 所有补丁 + 硬件配置指南。欢迎 Star ⭐
 
 ---
 
-### 到底能跑什么？不能跑什么？
-
-所有可执行实验的最终全景：
-
-#### ✅ 跑通（CPU + iGPU 足够）
-
-| 实验 | 耗时 |
-|:---|:----:|
-| UR5e 机械臂抓取 | 60s |
-| Cartpole PID 控制 | 30s |
-| Cartpole LQR 最优控制 | 30s |
-| Cartpole MPC 预测控制 | 17s |
-| Cartpole PPO 强化学习 | 5min（含训练） |
-| VLA MuJoCo 仿真环境初始化 | 10s |
-
-#### ❌ 不可跑（需要 NVIDIA GPU）
-
-- VLA 模型训练（ACT/Pi0/SmolVLA）
-- NVIDIA Isaac GR00T
-- ManiSkill PPO（GPU 渲染）
-- video2robot 端到端（需 API + GPU）
-
-#### 📘 纯理论章节
-
-- Ch04 计算机视觉与 3D 重建（SAM/深度估计）
-- Ch05 强化学习理论
-- Ch17 具身世界模型（LeWorldModel）
-
----
-
-### 硬件 vs 软件：性价比之王？
-
-极夜 T2 的 96GB 内存在具身智能这个领域有点尴尬——它不是 Mac Studio，不是游戏本，是一台没有 GPU 的迷你主机。但换个角度看：
-
-**96GB 意味着能同时跑多个虚拟机、大模型推理（Q4 量化可以装 47B 模型）、复杂的数值优化（CasADi 的 MPC 完全在内存里解）。**
-
-如果你在考虑类似的机器，我的建议是：
-
-- **做仿真（MuJoCo、MPC、传统的控制算法）** → ✅ 完全够用
-- **做训练（深度强化学习、VLA）** → ❌ 需要至少一张 RTX 4060
-- **做推理、做实验原型** → ✅ 性价比极高
-
----
-
-### 后续
-
-T2 有一个 **OCuLink 接口**，理论上可以外接 NVIDIA 显卡（RTX 4090 级别的 eGPU）。如果接上显卡，之前被 GPU 拦住的所有实验都能跑通了——包括 VLA 训练和 Isaac GR00T。
-
-下一步计划是：
-1. 装一个 eGPU dock
-2. 跑通 VLA 训练（ACT / Pi0）
-3. 把结果更新到 GitHub 仓库
-
----
-
-仓库：**[bossman-lab/embodied-intelligence](https://github.com/bossman-lab/embodied-intelligence)**
-
----
-
-*设备信息：极夜 T2（DeskOne T2），Ryzen AI 9 HX370，96GB DDR5，Radeon 890M，Windows 11*
+*课程内容源自 [Datawhale every-embodied](https://github.com/datawhalechina/every-embodied)，CC BY 4.0。实战适配记录 by @bossman-lab。*
