@@ -1,0 +1,18 @@
+Fix Chinese font missing
+
+Problem:
+  Scripts try to load ./AiDianFengYaHei（ShangYongMianFei）-2.ttf
+  FileNotFoundError: No such file or directory
+
+Solution:
+  Comment out custom font, use system default DejaVu Sans
+
+--- a/chapters/cartpole-PID.py
++++ b/chapters/cartpole-PID.py
+@@ -17,11 +17,6 @@
+-from matplotlib import font_manager
+-font_path = "./AiDianFengYaHei（ShangYongMianFei）-2.ttf"
+-font_manager.fontManager.addfont(font_path)
+-plt.rcParams['font.family'] = font_manager.FontProperties(fname=font_path).get_name()
++# font setup removed - use system default
++plt.rcParams['font.family'] = 'DejaVu Sans'
