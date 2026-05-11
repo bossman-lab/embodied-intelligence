@@ -45,7 +45,7 @@ wsl --install -d Ubuntu-24.04
 请启用虚拟机平台 Windows 功能并确保在 BIOS 中启用了虚拟化。
 ```
 
-**极夜 T2 的 BIOS 默认把虚拟化关了。** 必须进 BIOS 手动开：
+**极夜 T2 的 BIOS 默认把虚拟化了。** 必须进 BIOS 手动开：
 
 开机按 DEL → Advanced → CPU Configuration → **SVM Mode → Enabled** → F10 保存重启
 
@@ -55,7 +55,7 @@ wsl --install -d Ubuntu-24.04
 
 在 Windows 11 上，当你启用虚拟化（Hyper-V / WSL 2），系统会触发 **内核隔离（Core Isolation）** 的相关安全策略。
 
-具体来说，设备安全中的 **内存完整性（Memory Integrity）** 是一项基于 **虚拟化安全（Virtualization-Based Security, VBS）** 的功能。它会在 Hyper-V 之上再建立一个安全内核，对所有内核态代码进行签名校验：
+具体来说，设备安全中的 **内存完整性（Memory Integrity）** 是一项基于 **虚拟化安全（Virtualization-Based Security, VBS）** 的功能。它会在 Hyper-V 之上再建立一个安全内核，对所有内核态代码进行签名校验。
 
 ```
 ┌──────────────────────────────────────────────┐
@@ -86,7 +86,7 @@ wsl --install -d Ubuntu-24.04
 └──────────────────────────────────────────────┘
 ```
 
-这个功能默认是**关闭**的，但当你启用 WSL 2（Hyper-V）后，有些系统会自动提示你开启内存完整性以"增强安全性"。
+这个功能默认是**关闭**的，但当你启用 WSL 2（Hyper-V）后，有些系统会提示你开启内存完整性以"增强安全性"。
 
 关键在于：**这个功能一旦开启，对内存密集型工作负载（尤其是 LLM 推理）是致命打击。**
 
@@ -161,30 +161,86 @@ T2 上本来就在跑 **OpenClaw Gateway**（一个 Telegram Bot 网关，原生
 }
 ```
 
-Telegram bot `T2-Bot` 连上，直接在 T2 上响应命令。
+Telegram bot T2-Bot 连上，直接在 T2 上响应命令。
 
 最终架构：
 
 ```
          Telegram
-           │
+           |
      ┌─────┴──────┐
-     │            │
+     |            |
   Hermes       T2-Bot
 (Linux 服务器)  (OpenClaw/T2 原生 Windows)
-     │            │
-     │      ┌─────┴────────┐
-     │      │ 极夜 T2      │
-     │      │ ├ MuJoCo     │
-     │      │ ├ Genesis    │
-     │      │ ├ LM Studio  │  ← 稳定 24 tok/s
-     │      │ └ OpenClaw   │
-     │      │              │
-     └──────► SSH (备用)   │
+     |            |
+     |      ┌─────┴────────┐
+     |      | 极夜 T2      |
+     |      | ├ MuJoCo     |
+     |      | ├ Genesis    |
+     |      | ├ LM Studio  |  ← 稳定 24 tok/s
+     |      | └ OpenClaw   |
+     |      |              |
+     └──────► SSH (备用)   |
             └──────────────┘
 ```
 
-## 总结
+## WSL 的局限与 Windows 的落后 —— 实话实说
+
+折腾完这一圈，有些话不吐不快。
+
+### WSL 2 的定位出了偏差
+
+WSL 2 刚出的时候，微软说它是"面向开发者的 Windows 最佳功能"。但用了一年多下来，我觉得它的定位很尴尬：
+
+**WSL 2 适合跑纯 Linux 命令行工具（grep、awk、git、ssh），不适合跑真正的 Linux 工作负载（容器、GPU 计算、AI 推理）。**
+
+为什么？
+
+- **它不是真正的集成**。文件系统性能在 `/mnt/` 下打三折，网络要折腾桥接，GPU 只支持 NVIDIA。
+- **它带来了安全冲突**。为了跑一个 Linux 子系统，你要牵动整个 Windows 的虚拟化安全体系。一个开发者工具，却要你动 BIOS、调安全策略、承担全系统的性能代价——这合理吗？
+- **它对 AI/ML 开发者不友好**。2024-2026 年，AI 开发已经是主流。WSL 2 在 AMD GPU 支持上完全缺席，Intel GPU 支持也是半残。NVIDIA 用户在 WSL 里能跑 CUDA，AMD 用户？请你自己想办法。
+- **它的内存管理是黑箱**。Vmmem 进程在任务管理器里是一个黑洞，你不知道内存是怎么分配的，也没法精细控制。
+
+### Windows 在 AI 时代的落后是结构性的
+
+这件事让我看清了一个更大的问题：**Windows 在 AI 基础设施上已经严重落后了。**
+
+Linux 生态处理 AI/ML 工作负载的方式是：
+1. 装 NVIDIA 驱动 → `nvidia-smi` → 装 CUDA → 装 PyTorch → 跑起来
+2. 全过程没有"设备安全"、"内核隔离"、"虚拟化安全"的干扰
+3. Docker 原生支持 GPU 穿透
+
+Windows 生态是：
+1. 装 NVIDIA 驱动（如果用的是 AMD GPU，对不起）
+2. 决定用 WSL 还是原生还是 Docker Desktop（哪个都有坑）
+3. 如果走 WSL，需要开虚拟化 → 触发 Hyper-V → 触发内存完整性
+4. 性能降级 → 关安全功能 → 系统弹警告
+5. 告诉自己"就这样吧"
+
+**问题不在技术细节，在微软的产品策略。**
+
+微软这几年在 AI 上喊得很大声（Copilot、Azure AI），但 Windows 作为 AI 开发者平台的体验几乎没有进步。2026 年了，一个开发者想在 Windows 上跑 LLM 推理 + 仿真，需要：
+
+- 进 BIOS 开虚拟化
+- 配置内存完整性
+- 关掉安全功能恢复性能
+- 容忍系统弹安全警告
+- 用第三方工具（OpenClaw）做自动化
+
+这些坑本不该由开发者来踩。
+
+### WSL 的未来方向？
+
+WSL 如果要真正成为 AI 开发者的选择，我认为需要：
+
+1. **解耦虚拟化和安全**。WSL 不需要强制启用 VBS/内存完整性。
+2. **原生 GPU 支持脱离 CUDA 绑定**。AMD 和 Intel 用户在 WSL 里也应该有平等的 GPU 加速能力。
+3. **精细的资源控制**。给用户一个面板，直接设置 WSL 的 CPU/内存上限，实时可见，而不是靠 `.wslconfig` 黑魔法。
+4. **网络模型可选**。NAT 模式下就做好端口转发的自动化，不要每次重启 IP 都变。
+
+但说实话，经过这次折腾，我对 WSL 的信心已经消耗完了。它给我的感觉是：**微软自己做了一个好东西，却被 Windows 自身的安全体系架空了。**
+
+## 最终总结
 
 ```
 需求：手机遥控 T2 跑具身智能 demo
@@ -208,16 +264,21 @@ Telegram bot `T2-Bot` 连上，直接在 T2 上响应命令。
 决策：放弃 WSL + Hermes
        用 OpenClaw Gateway（原生 Windows）
        配合 Hermes 做上层调度
+  ↓
+现状：手机一条消息 → T2 自动跑 demo → LM Studio 稳定 24 tok/s
 ```
 
-**教训：**
-1. Win11 的设备安全（内存完整性 / VBS）对 LLM 推理是性能杀手。不是资源不够，是安全验证层给每次内存操作加了巨大开销。
-2. WSL 2 需要虚拟化层，虚拟化层和 VBS/内存完整性绑定——不是你想拆就能拆。
-3. 如果主机的核心负载是 LLM 推理/仿真，原生 Windows 方案（如 OpenClaw）比 WSL 嵌套方案靠谱得多。
-4. 现在工作流很顺：我在 Telegram 上让 Hermes 跑 demo → Hermes 调度 T2-Bot → T2 自动执行 → 结果返回。全程零手动 SSH。
+**几点实在的教训：**
+
+1. **Win11 的内存完整性 / VBS 对 LLM 推理是性能杀手**。不是资源不够，是 Hypervisor 验证层给每次内存操作加了巨大开销。
+2. **WSL 2 不适合跑需要 GPU + 高内存带宽的工作负载**。它的定位就是命令行工具，不是 AI 计算平台。
+3. **Windows AI 生态还没准备好**。2026 年了，跑个具身智能 demo 要过五关斩六将——这不该是常态。
+4. **原生方案 > 嵌套方案**。OpenClaw 原生 Windows，没有中间层，没有性能损耗，一直都能用——只是我一开始没往这个方向想。
 
 ---
 
-仓库：[bossman-lab/embodied-intelligence](https://github.com/bossman-lab/embodied-intelligence)
+**仓库：[bossman-lab/embodied-intelligence](https://github.com/bossman-lab/embodied-intelligence)**
 
 姊妹篇：[极夜T2 跑通 Every-Embodied 课程全记录](./t2-embodied-journey.md)
+
+> 最后说一句：这篇文章不是黑 Windows。我每天都用 Windows，极夜 T2 作为一台迷你主机，硬件体验很好。但微软在 AI 开发者体验上的投入，和这个时代的需求之间，有一个巨大的鸿沟。希望 Windows 12 能填上。
